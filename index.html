@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    Sistema de Gestión del Tribunal
+  </title>
+
+
+  <!-- ESTILOS -->
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  />
+
+
+  <!-- FONT AWESOME -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  />
+
+</head>
+
+
+<body>
+
+  <div class="app">
+
+
+    <!-- ======================================== -->
+    <!-- SIDEBAR -->
+    <!-- ======================================== -->
+
+    <aside class="sidebar">
+
+
+      <!-- LOGO -->
+
+      <div class="brand">
+
+        <div class="brand-icon">
+
+          <i class="fa-solid fa-scale-balanced"></i>
+
+        </div>
+
+
+        <div class="brand-text">
+
+          <h2>
+            Tribunal
+          </h2>
+
+          <span>
+            Gestión jurídica
+          </span>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- NAVEGACIÓN -->
+
+      <nav class="nav">
+
+
+        <!-- INICIO -->
+
+        <button
+          class="nav-item active"
+          data-page="inicio"
+        >
+
+          <i class="fa-solid fa-house"></i>
+
+          <span>
+            Inicio
+          </span>
+
+        </button>
+
+
+
+        <!-- EXPEDIENTES -->
+
+        <button
+          class="nav-item"
+          data-page="expedientes"
+        >
+
+          <i class="fa-solid fa-folder-open"></i>
+
+          <span>
+            Expedientes
+          </span>
+
+        </button>
+
+
+
+        <!-- DEMANDAS -->
+
+        <button
+          class="nav-item"
+          data-page="demandas"
+        >
+
+          <i class="fa-solid fa-file-signature"></i>
+
+          <span>
+            Demandas
+          </span>
+
+        </button>
+
+
+
+        <!-- AMPAROS -->
+
+        <button
+          class="nav-item"
+          data-page="amparos"
+        >
+
+          <i class="fa-solid fa-shield-halved"></i>
+
+          <span>
+            Amparos
+          </span>
+
+        </button>
+
+
+
+        <!-- EXHORTOS -->
+
+        <button
+          class="nav-item"
+          data-page="exhortos"
+        >
+
+          <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+          <span>
+            Exhortos
+          </span>
+
+        </button>
+
+
+
+        <!-- PROMOCIONES -->
+
+        <button
+          class="nav-item"
+          data-page="promociones"
+        >
+
+          <i class="fa-solid fa-file-lines"></i>
+
+          <span>
+            Promociones
+          </span>
+
+        </button>
+
+
+
+        <!-- OFICIOS -->
+
+        <button
+          class="nav-item"
+          data-page="oficios"
+        >
+
+          <i class="fa-solid fa-envelope-open-text"></i>
+
+          <span>
+            Oficios
+          </span>
+
+        </button>
+
+
+
+        <!-- RESUMEN HISTÓRICO -->
+
+        <button
+          class="nav-item"
+          data-page="resumenHistorico"
+        >
+
+          <i class="fa-solid fa-clock-rotate-left"></i>
+
+          <span>
+            Resumen Histórico
+          </span>
+
+        </button>
+
+
+      </nav>
+
+
+
+      <!-- PARTE INFERIOR -->
+
+      <div class="sidebar-bottom">
+
+
+        <button class="nav-item">
+
+          <i class="fa-solid fa-gear"></i>
+
+          <span>
+            Configuración
+          </span>
+
+        </button>
+
+
+        <button class="nav-item">
+
+          <i class="fa-solid fa-right-from-bracket"></i>
+
+          <span>
+            Cerrar sesión
+          </span>
+
+        </button>
+
+
+      </div>
+
+
+    </aside>
+
+
+
+    <!-- ======================================== -->
+    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ======================================== -->
+
+    <main class="main">
+
+
+      <!-- ====================================== -->
+      <!-- TOPBAR -->
+      <!-- ====================================== -->
+
+      <header class="topbar">
+
+
+        <!-- BUSCADOR GLOBAL -->
+
+        <div class="global-search">
+
+          <i class="fa-solid fa-magnifying-glass"></i>
+
+          <input
+            id="globalSearch"
+            type="text"
+            placeholder="Buscar expediente, actor, oficio..."
+          />
+
+        </div>
+
+
+
+        <!-- USUARIO -->
+
+        <div class="topbar-actions">
+
+
+          <button class="icon-button">
+
+            <i class="fa-regular fa-bell"></i>
+
+            <span class="notification-dot"></span>
+
+          </button>
+
+
+
+          <div class="user">
+
+
+            <div class="avatar">
+
+              JP
+
+            </div>
+
+
+            <div class="user-info">
+
+              <strong>
+                Juan Pérez
+              </strong>
+
+              <span>
+                Administrador
+              </span>
+
+            </div>
+
+
+          </div>
+
+
+        </div>
+
+
+      </header>
+
+
+
+      <!-- ======================================== -->
+      <!-- INICIO -->
+      <!-- ======================================== -->
+
+      <section
+        class="page active"
+        id="inicio"
+      >
+
+
+        <!-- TÍTULO -->
+
+        <div class="page-heading">
+
+          <span class="eyebrow">
+            Gestión jurídica
+          </span>
+
+          <h1>
+            ¿Qué expediente necesitas?
+          </h1>
+
+          <p>
+            Busca un expediente existente o registra uno nuevo para comenzar.
+          </p>
+
+        </div>
+
+
+
+        <!-- ====================================== -->
+        <!-- LAYOUT PRINCIPAL DEL INICIO -->
+        <!-- ====================================== -->
+
+        <div class="home-layout">
+
+
+          <!-- ==================================== -->
+          <!-- COLUMNA PRINCIPAL -->
+          <!-- ==================================== -->
+
+          <div class="home-primary">
+
+
+            <!-- BUSCAR EXPEDIENTE -->
+
+            <div class="search-card">
+
+              <label for="expedienteSearch">
+
+                Número de expediente
+
+              </label>
+
+
+              <div class="main-search">
+
+
+                <i class="fa-solid fa-folder"></i>
+
+
+                <input
+                  id="expedienteSearch"
+                  type="text"
+                  placeholder="Ej. 124/2026"
+                />
+
+
+                <button
+                  id="searchExpedienteBtn"
+                  class="primary-btn"
+                >
+
+                  Buscar expediente
+
+                </button>
+
+
+              </div>
+
+
+              <div id="searchResult"></div>
+
+
+            </div>
+
+
+
+            <!-- NUEVO EXPEDIENTE -->
+
+            <div class="new-record">
+
+
+              <div>
+
+                <h3>
+                  ¿El expediente todavía no existe?
+                </h3>
+
+                <p>
+                  Puedes crear un nuevo expediente y agregar información después.
+                </p>
+
+              </div>
+
+
+              <button
+                class="secondary-btn"
+                onclick="openNewExpediente()"
+              >
+
+                <i class="fa-solid fa-plus"></i>
+
+                Crear nuevo expediente
+
+              </button>
+
+
+            </div>
+
+
+
+            <!-- ================================== -->
+            <!-- ACCIONES RÁPIDAS -->
+            <!-- ================================== -->
+
+            <div class="section-title">
+
+              <div>
+
+                <h2>
+                  Acciones rápidas
+                </h2>
+
+                <p>
+                  Registra un nuevo movimiento.
+                </p>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="quick-grid">
+
+
+              <!-- DEMANDA -->
+
+              <button
+                class="quick-card"
+                onclick="openForm('demandaForm')"
+              >
+
+                <div class="quick-icon">
+
+                  <i class="fa-solid fa-file-signature"></i>
+
+                </div>
+
+
+                <div class="quick-content">
+
+                  <strong>
+                    Demanda
+                  </strong>
+
+                  <span>
+                    Registrar nueva demanda
+                  </span>
+
+                </div>
+
+              </button>
+
+
+
+              <!-- AMPARO -->
+
+              <button
+                class="quick-card"
+                onclick="openForm('amparoForm')"
+              >
+
+                <div class="quick-icon">
+
+                  <i class="fa-solid fa-shield-halved"></i>
+
+                </div>
+
+
+                <div class="quick-content">
+
+                  <strong>
+                    Amparo
+                  </strong>
+
+                  <span>
+                    Registrar nuevo amparo
+                  </span>
+
+                </div>
+
+              </button>
+
+
+
+              <!-- EXHORTO -->
+
+              <button
+                class="quick-card"
+                onclick="openForm('exhortoForm')"
+              >
+
+                <div class="quick-icon">
+
+                  <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                </div>
+
+
+                <div class="quick-content">
+
+                  <strong>
+                    Exhorto
+                  </strong>
+
+                  <span>
+                    Registrar nuevo exhorto
+                  </span>
+
+                </div>
+
+              </button>
+
+
+
+              <!-- PROMOCIÓN -->
+
+              <button
+                class="quick-card"
+                onclick="openForm('promocionForm')"
+              >
+
+                <div class="quick-icon">
+
+                  <i class="fa-solid fa-file-lines"></i>
+
+                </div>
+
+
+                <div class="quick-content">
+
+                  <strong>
+                    Promoción
+                  </strong>
+
+                  <span>
+                    Registrar nueva promoción
+                  </span>
+
+                </div>
+
+              </button>
+
+
+
+              <!-- OFICIO -->
+
+              <button
+                class="quick-card"
+                onclick="openForm('oficioForm')"
+              >
+
+                <div class="quick-icon">
+
+                  <i class="fa-solid fa-envelope-open-text"></i>
+
+                </div>
+
+
+                <div class="quick-content">
+
+                  <strong>
+                    Oficio
+                  </strong>
+
+                  <span>
+                    Registrar nuevo oficio
+                  </span>
+
+                </div>
+
+              </button>
+
+
+            </div>
+
+
+
+            <!-- ================================== -->
+            <!-- EXPEDIENTES RECIENTES -->
+            <!-- ================================== -->
+
+            <div class="section-title recent-title">
+
+              <div>
+
+                <h2>
+                  Expedientes recientes
+                </h2>
+
+                <p>
+                  Últimos expedientes registrados.
+                </p>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="table-container">
+
+
+              <table>
+
+
+                <thead>
+
+                  <tr>
+
+                    <th>
+                      Expediente
+                    </th>
+
+                    <th>
+                      Actor
+                    </th>
+
+                    <th>
+                      Demandado
+                    </th>
+
+                    <th>
+                      Estado
+                    </th>
+
+                    <th>
+                      Ubicación
+                    </th>
+
+                    <th>
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+
+
+                <tbody id="recentTable">
+
+                </tbody>
+
+
+              </table>
+
+
+            </div>
+
+
+          </div>
+
+
+
+          <!-- ==================================== -->
+          <!-- PANEL DERECHO -->
+          <!-- ==================================== -->
+
+          <aside class="daily-panel">
+
+
+            <!-- ================================== -->
+            <!-- RESUMEN DIARIO -->
+            <!-- ================================== -->
+
+            <section class="daily-summary-card">
+
+
+              <div class="daily-card-header">
+
+
+                <div>
+
+                  <span class="daily-eyebrow">
+                    Actividad de hoy
+                  </span>
+
+                  <h2>
+                    Resumen diario
+                  </h2>
+
+                </div>
+
+
+
+                <div class="daily-date">
+
+                  <i class="fa-regular fa-calendar"></i>
+
+                  <span id="dailyDate">
+                    —
+                  </span>
+
+                </div>
+
+
+              </div>
+
+
+
+              <!-- TOTAL -->
+
+              <div class="daily-total">
+
+
+                <div>
+
+                  <span>
+                    Total de capturas
+                  </span>
+
+                  <strong id="dailyTotal">
+                    0
+                  </strong>
+
+                </div>
+
+
+                <div class="daily-total-icon">
+
+                  <i class="fa-solid fa-file-circle-check"></i>
+
+                </div>
+
+
+              </div>
+
+
+
+              <!-- CONTADORES -->
+
+              <div class="daily-stats">
+
+
+                <!-- DEMANDAS -->
+
+                <div class="daily-stat">
+
+                  <div class="daily-stat-icon">
+
+                    <i class="fa-solid fa-file-signature"></i>
+
+                  </div>
+
+
+                  <div class="daily-stat-info">
+
+                    <span>
+                      Demandas
+                    </span>
+
+                    <strong id="dailyDemandas">
+                      0
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+
+                <!-- AMPAROS -->
+
+                <div class="daily-stat">
+
+                  <div class="daily-stat-icon">
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                  </div>
+
+
+                  <div class="daily-stat-info">
+
+                    <span>
+                      Amparos
+                    </span>
+
+                    <strong id="dailyAmparos">
+                      0
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+
+                <!-- EXHORTOS -->
+
+                <div class="daily-stat">
+
+                  <div class="daily-stat-icon">
+
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                  </div>
+
+
+                  <div class="daily-stat-info">
+
+                    <span>
+                      Exhortos
+                    </span>
+
+                    <strong id="dailyExhortos">
+                      0
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+
+                <!-- PROMOCIONES -->
+
+                <div class="daily-stat">
+
+                  <div class="daily-stat-icon">
+
+                    <i class="fa-solid fa-file-lines"></i>
+
+                  </div>
+
+
+                  <div class="daily-stat-info">
+
+                    <span>
+                      Promociones
+                    </span>
+
+                    <strong id="dailyPromociones">
+                      0
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+
+                <!-- OFICIOS -->
+
+                <div class="daily-stat">
+
+                  <div class="daily-stat-icon">
+
+                    <i class="fa-solid fa-envelope-open-text"></i>
+
+                  </div>
+
+
+                  <div class="daily-stat-info">
+
+                    <span>
+                      Oficios
+                    </span>
+
+                    <strong id="dailyOficios">
+                      0
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+              </div>
+
+
+            </section>
+
+
+
+            <!-- ================================== -->
+            <!-- ÚLTIMAS CAPTURAS -->
+            <!-- ================================== -->
+
+            <section class="recent-captures-card">
+
+
+              <div class="recent-captures-header">
+
+
+                <div>
+
+                  <span class="daily-eyebrow">
+                    Actividad
+                  </span>
+
+                  <h3>
+                    Últimas capturas
+                  </h3>
+
+                </div>
+
+
+                <span>
+                  Hoy
+                </span>
+
+
+              </div>
+
+
+
+              <div
+                id="dailyRecentCaptures"
+                class="daily-recent-list"
+              >
+
+              </div>
+
+
+            </section>
+
+
+          </aside>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- EXPEDIENTES -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="expedientes"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Gestión
+            </span>
+
+            <h1>
+              Expedientes
+            </h1>
+
+            <p>
+              Consulta y administra los expedientes registrados.
+            </p>
+
+          </div>
+
+
+
+          <button
+            class="primary-btn"
+            onclick="openNewExpediente()"
+          >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Nuevo expediente
+
+          </button>
+
+
+        </div>
+
+
+
+        <!-- FILTRO -->
+
+        <div class="filter-bar">
+
+
+          <div class="filter-search">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+              id="filterExpedientes"
+              type="text"
+              placeholder="Buscar expediente, actor o demandado..."
+            />
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- TABLA -->
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  No. expediente
+                </th>
+
+                <th>
+                  Fecha
+                </th>
+
+                <th>
+                  Actor
+                </th>
+
+                <th>
+                  Demandado
+                </th>
+
+                <th>
+                  Clasificación
+                </th>
+
+                <th>
+                  Estado
+                </th>
+
+                <th>
+                  Ubicación
+                </th>
+
+                <th>
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="expedientesTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- DEMANDAS -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="demandas"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Registro
+            </span>
+
+            <h1>
+              Demandas
+            </h1>
+
+            <p>
+              Consulta y registra demandas.
+            </p>
+
+          </div>
+
+
+
+          <button
+            class="primary-btn"
+            onclick="openForm('demandaForm')"
+          >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Registrar demanda
+
+          </button>
+
+
+        </div>
+
+
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Expediente
+                </th>
+
+                <th>
+                  Fecha
+                </th>
+
+                <th>
+                  Actor
+                </th>
+
+                <th>
+                  Demandado
+                </th>
+
+                <th>
+                  Actos
+                </th>
+
+                <th>
+                  Estado
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="demandasTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- AMPAROS -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="amparos"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Registro
+            </span>
+
+            <h1>
+              Amparos
+            </h1>
+
+            <p>
+              Consulta y registra amparos.
+            </p>
+
+          </div>
+
+
+
+          <button
+            class="primary-btn"
+            onclick="openForm('amparoForm')"
+          >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Registrar amparo
+
+          </button>
+
+
+        </div>
+
+
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Fecha
+                </th>
+
+                <th>
+                  Hora
+                </th>
+
+                <th>
+                  Expediente
+                </th>
+
+                <th>
+                  Promovente
+                </th>
+
+                <th>
+                  No. juzgado
+                </th>
+
+                <th>
+                  Oficio relacionado
+                </th>
+
+                <th>
+                  Estado
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="amparosTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- EXHORTOS -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="exhortos"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Registro
+            </span>
+
+            <h1>
+              Exhortos
+            </h1>
+
+            <p>
+              Consulta y registra exhortos.
+            </p>
+
+          </div>
+
+
+
+          <button
+            class="primary-btn"
+            onclick="openForm('exhortoForm')"
+          >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Registrar exhorto
+
+          </button>
+
+
+        </div>
+
+
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  No. exhorto
+                </th>
+
+                <th>
+                  Fecha
+                </th>
+
+                <th>
+                  No. origen
+                </th>
+
+                <th>
+                  Actor
+                </th>
+
+                <th>
+                  Demandado
+                </th>
+
+                <th>
+                  Autoridad exhortante
+                </th>
+
+                <th>
+                  Estado
+                </th>
+
+                <th>
+                  Ubicación
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="exhortosTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- PROMOCIONES -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="promociones"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Registro
+            </span>
+
+            <h1>
+              Promociones
+            </h1>
+
+            <p>
+              Consulta y registra promociones relacionadas con los expedientes.
+            </p>
+
+          </div>
+
+
+
+          <button
+            class="primary-btn"
+            onclick="openForm('promocionForm')"
+          >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Registrar promoción
+
+          </button>
+
+
+        </div>
+
+
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Número
+                </th>
+
+                <th>
+                  Expediente
+                </th>
+
+                <th>
+                  Fecha
+                </th>
+
+                <th>
+                  Procedencia
+                </th>
+
+                <th>
+                  Asunto
+                </th>
+
+                <th>
+                  Estado
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="promocionesTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- OFICIOS -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="oficios"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Registro
+            </span>
+
+            <h1>
+              Oficios
+            </h1>
+
+            <p>
+              Consulta y registra oficios relacionados con los expedientes.
+            </p>
+
+          </div>
+
+
+
+          <button
+            class="primary-btn"
+            onclick="openForm('oficioForm')"
+          >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Registrar oficio
+
+          </button>
+
+
+        </div>
+
+
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Número
+                </th>
+
+                <th>
+                  Expediente
+                </th>
+
+                <th>
+                  Fecha
+                </th>
+
+                <th>
+                  Procedencia
+                </th>
+
+                <th>
+                  Asunto
+                </th>
+
+                <th>
+                  Estado
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="oficiosTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ======================================== -->
+      <!-- RESUMEN HISTÓRICO -->
+      <!-- ======================================== -->
+
+      <section
+        class="page"
+        id="resumenHistorico"
+      >
+
+
+        <div class="module-header">
+
+
+          <div>
+
+            <span class="eyebrow">
+              Consulta
+            </span>
+
+            <h1>
+              Resumen Histórico
+            </h1>
+
+            <p>
+              Consulta las capturas realizadas dentro de un intervalo de tiempo.
+            </p>
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- ====================================== -->
+        <!-- FILTROS HISTÓRICOS -->
+        <!-- ====================================== -->
+
+        <div class="history-filter-card">
+
+
+          <div class="history-filter-header">
+
+
+            <div>
+
+              <h2>
+                Buscar capturas
+              </h2>
+
+              <p>
+                Selecciona el periodo y el tipo de registro que deseas consultar.
+              </p>
+
+            </div>
+
+
+          </div>
+
+
+
+          <div class="history-filter-grid">
+
+
+            <!-- FECHA INICIO -->
+
+            <div class="field">
+
+              <label for="historyStartDate">
+                Fecha de inicio
+              </label>
+
+              <input
+                id="historyStartDate"
+                type="date"
+              />
+
+            </div>
+
+
+
+            <!-- FECHA FINAL -->
+
+            <div class="field">
+
+              <label for="historyEndDate">
+                Fecha final
+              </label>
+
+              <input
+                id="historyEndDate"
+                type="date"
+              />
+
+            </div>
+
+
+
+            <!-- TIPO -->
+
+            <div class="field">
+
+              <label for="historyType">
+                Tipo de captura
+              </label>
+
+              <select id="historyType">
+
+                <option value="todos">
+                  Todos
+                </option>
+
+                <option value="Demanda">
+                  Demandas
+                </option>
+
+                <option value="Amparo">
+                  Amparos
+                </option>
+
+                <option value="Exhorto">
+                  Exhortos
+                </option>
+
+                <option value="Promoción">
+                  Promociones
+                </option>
+
+                <option value="Oficio">
+                  Oficios
+                </option>
+
+              </select>
+
+            </div>
+
+
+
+            <!-- BOTONES -->
+
+            <div class="history-filter-actions">
+
+
+              <button
+                id="historySearchBtn"
+                class="primary-btn"
+              >
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                Buscar
+
+              </button>
+
+
+
+              <button
+                id="historyClearBtn"
+                class="secondary-btn"
+              >
+
+                Limpiar
+
+              </button>
+
+
+            </div>
+
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- ====================================== -->
+        <!-- RESULTADO -->
+        <!-- ====================================== -->
+
+        <div class="history-results-header">
+
+
+          <div>
+
+            <h2>
+              Resultados
+            </h2>
+
+            <p id="historyResultText">
+              Mostrando todos los movimientos registrados.
+            </p>
+
+          </div>
+
+
+
+          <div class="history-counter">
+
+            <span>
+              Registros
+            </span>
+
+            <strong id="historyTotal">
+              0
+            </strong>
+
+          </div>
+
+
+        </div>
+
+
+
+        <!-- TABLA -->
+
+        <div class="table-container">
+
+
+          <table>
+
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Fecha y hora
+                </th>
+
+                <th>
+                  Tipo
+                </th>
+
+                <th>
+                  Referencia
+                </th>
+
+                <th>
+                  Movimiento
+                </th>
+
+                <th>
+                  Detalle
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody id="historyTable">
+
+            </tbody>
+
+
+          </table>
+
+
+        </div>
+
+
+      </section>
+
+
+    </main>
+
+
+  </div>
+
+
+
+  <!-- ======================================== -->
+  <!-- MODAL GENERAL -->
+  <!-- ======================================== -->
+
+  <div
+    id="modal"
+    class="modal"
+  >
+
+
+    <div class="modal-card">
+
+
+      <button
+        class="modal-close"
+        onclick="closeModal()"
+      >
+
+        <i class="fa-solid fa-xmark"></i>
+
+      </button>
+
+
+
+      <div id="modalContent">
+
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+
+  <!-- ======================================== -->
+  <!-- JAVASCRIPT -->
+  <!-- ======================================== -->
+
+  <script src="app.js"></script>
+
+
+</body>
+
+</html>
