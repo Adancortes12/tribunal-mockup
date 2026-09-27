@@ -1,103 +1,44 @@
+import {
+  createId,
+  escapeHTML,
+  escapeJS,
+  formatDate,
+  todayISO,
+} from "../utils.js";
+
 // =====================================================
 // MODULO AMPAROS
 // =====================================================
 
-
-import {
-    getData,
-    saveData
-}
-from "../storage.js";
-
-
-import {
-    createId,
-    escapeHTML,
-    escapeJS,
-    formatDate
-}
-from "../utils.js";
-
-
+import { getData, saveData } from "../storage.js";
 
 let amparos = [];
-
-
-
 
 // =====================================================
 // INICIALIZAR
 // =====================================================
 
+export function initAmparos() {
+  amparos = getData("amparos", []);
 
-export function initAmparos(){
-
-
-    amparos =
-        getData(
-            "amparos",
-            []
-        );
-
-
-
-    window.openAmparoForm =
-        openAmparoForm;
-
-
-
-    window.renderAmparos =
-        renderAmparos;
-
-
-
-    window.viewAmparo =
-        viewAmparo;
-
-
-
+  window.openAmparoForm = openAmparoForm;
+  window.renderAmparos = renderAmparos;
+  window.viewAmparo = viewAmparo;
+  window.anexarOficioAmparo = anexarOficioAmparo;
 }
-
-
-
-
-
-
-
-
-
 // =====================================================
 // RENDER TABLA
 // =====================================================
 
+export function renderAmparos() {
+  const table = document.getElementById("amparosTable");
 
-export function renderAmparos(){
+  if (!table) {
+    return;
+  }
 
-
-    const table =
-        document.getElementById(
-            "amparosTable"
-        );
-
-
-
-    if(!table){
-
-        return;
-
-    }
-
-
-
-
-
-
-    if(
-        amparos.length === 0
-    ){
-
-
-        table.innerHTML = `
+  if (amparos.length === 0) {
+    table.innerHTML = `
 
         <tr>
 
@@ -111,24 +52,12 @@ export function renderAmparos(){
 
         `;
 
+    return;
+  }
 
-        return;
-
-    }
-
-
-
-
-
-
-
-
-    table.innerHTML =
-
-
-    amparos.map(
-
-        amparo => `
+  table.innerHTML = amparos
+    .map(
+      (amparo) => `
 
 
 
@@ -138,9 +67,7 @@ export function renderAmparos(){
 
 <td>
 
-${escapeHTML(
-    formatDate(amparo.dia)
-)}
+${escapeHTML(formatDate(amparo.dia))}
 
 </td>
 
@@ -149,21 +76,7 @@ ${escapeHTML(
 
 <td>
 
-${escapeHTML(
-    amparo.hora
-)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(
-    amparo.expediente
-)}
+${escapeHTML(amparo.hora)}
 
 </td>
 
@@ -173,9 +86,7 @@ ${escapeHTML(
 
 <td>
 
-${escapeHTML(
-    amparo.promueve
-)}
+${escapeHTML(amparo.expediente)}
 
 </td>
 
@@ -185,9 +96,7 @@ ${escapeHTML(
 
 <td>
 
-${escapeHTML(
-    amparo.juzgado
-)}
+${escapeHTML(amparo.promueve)}
 
 </td>
 
@@ -197,9 +106,7 @@ ${escapeHTML(
 
 <td>
 
-${escapeHTML(
-    amparo.oficio
-)}
+${escapeHTML(amparo.juzgado)}
 
 </td>
 
@@ -209,122 +116,77 @@ ${escapeHTML(
 
 <td>
 
+${escapeHTML(amparo.oficio)}
+
+</td>
+
+
+
+
+
+<td>
 
 <button
-
 class="table-action"
-
-onclick="
-viewAmparo('${escapeJS(amparo.id)}')
-"
-
+onclick="viewAmparo('${escapeJS(amparo.id)}')"
 >
-
 Ver
-
 </button>
 
-
+<button
+class="table-action"
+onclick="anexarOficioAmparo('${escapeJS(amparo.id)}')"
+>
+Anexar oficio
+</button>
 
 </td>
-
-
-
 </tr>
 
 
 
-`
-
+`,
     )
 
     .join("");
-
 }
-
-
-
-
-
-
-
-
 
 // =====================================================
 // FORMULARIO AMPARO
 // =====================================================
 
+export function openAmparoForm() {
+  const modal = document.getElementById("modalContent");
 
-export function openAmparoForm(){
-
-
-
-const modal =
-document.getElementById(
-    "modalContent"
-);
-
-
-
-if(!modal){
-
+  if (!modal) {
     return;
+  }
 
-}
-
-
-
-
-
-modal.innerHTML = `
-
-
+  modal.innerHTML = `
 
 <div class="form-header">
-
 
 <span>
 Amparos
 </span>
 
-
 <h2>
 Nuevo amparo
 </h2>
 
-
 </div>
-
-
-
-
-
-
 
 <div class="form-body">
 
-
-
 <form id="amparoForm">
-
-
-
-
-
 
 <div class="form-grid">
 
-
-
-
-
 <div class="field">
-
 
 <label>
 Día
 </label>
-
 
 <input
 
@@ -336,22 +198,13 @@ required
 
 >
 
-
 </div>
 
-
-
-
-
-
-
 <div class="field">
-
 
 <label>
 Hora
 </label>
-
 
 <input
 
@@ -363,22 +216,13 @@ required
 
 >
 
-
 </div>
 
-
-
-
-
-
-
 <div class="field">
-
 
 <label>
 Número expediente
 </label>
-
 
 <input
 
@@ -388,22 +232,13 @@ required
 
 >
 
-
 </div>
 
-
-
-
-
-
-
 <div class="field">
-
 
 <label>
 Quién promueve
 </label>
-
 
 <input
 
@@ -413,22 +248,13 @@ required
 
 >
 
-
 </div>
 
-
-
-
-
-
-
 <div class="field">
-
 
 <label>
 Número asignado por juzgado
 </label>
-
 
 <input
 
@@ -436,23 +262,13 @@ id="amparoJuzgado"
 
 >
 
-
 </div>
 
-
-
-
-
-
-
-
 <div class="field">
-
 
 <label>
 Número de oficio registrado
 </label>
-
 
 <input
 
@@ -460,23 +276,13 @@ id="amparoOficio"
 
 >
 
-
 </div>
 
-
-
-
-
-
-
-
 <div class="field full">
-
 
 <label>
 Qué se tiene que hacer
 </label>
-
 
 <textarea
 
@@ -486,23 +292,11 @@ rows="4"
 
 ></textarea>
 
-
 </div>
 
-
-
-
-
 </div>
-
-
-
-
-
-
 
 <div class="form-actions">
-
 
 <button
 
@@ -518,9 +312,6 @@ Cancelar
 
 </button>
 
-
-
-
 <button
 
 class="primary-btn"
@@ -531,253 +322,113 @@ Guardar amparo
 
 </button>
 
-
 </div>
-
-
-
-
 
 </form>
 
-
-
 </div>
-
-
 
 `;
 
+  document.getElementById("modal").classList.add("show");
 
-
-
-
-
-document
-.getElementById(
-    "modal"
-)
-.classList.add(
-    "show"
-);
-
-
-
-
-
-
-document
-.getElementById(
-    "amparoForm"
-)
-.addEventListener(
-
+  document.getElementById("amparoForm").addEventListener(
     "submit",
 
-    saveAmparo
-
-);
-
-
-
+    saveAmparo,
+  );
 }
-
-
-
-
-
-
-
-
 
 // =====================================================
 // GUARDAR
 // =====================================================
 
+function saveAmparo(event) {
+  event.preventDefault();
 
-function saveAmparo(
-event
-){
+  const amparo = {
+    id: createId(),
 
+    dia: document.getElementById("amparoDia").value,
 
-event.preventDefault();
+    hora: document.getElementById("amparoHora").value,
 
+    expediente: document.getElementById("amparoExpediente").value,
 
+    promueve: document.getElementById("amparoPromueve").value,
 
+    juzgado: document.getElementById("amparoJuzgado").value,
 
+    oficio: document.getElementById("amparoOficio").value,
 
-const amparo = {
+    accion: document.getElementById("amparoAccion").value,
 
+    creadoEn: new Date().toISOString(),
+  };
 
-    id:
+  amparos.unshift(amparo);
 
-    createId(),
+  saveData("amparos", amparos);
 
+  renderAmparos();
 
-
-    dia:
-
-    document
-    .getElementById(
-        "amparoDia"
-    )
-    .value,
-
-
-
-    hora:
-
-    document
-    .getElementById(
-        "amparoHora"
-    )
-    .value,
-
-
-
-    expediente:
-
-    document
-    .getElementById(
-        "amparoExpediente"
-    )
-    .value,
-
-
-
-    promueve:
-
-    document
-    .getElementById(
-        "amparoPromueve"
-    )
-    .value,
-
-
-
-    juzgado:
-
-    document
-    .getElementById(
-        "amparoJuzgado"
-    )
-    .value,
-
-
-
-    oficio:
-
-    document
-    .getElementById(
-        "amparoOficio"
-    )
-    .value,
-
-
-
-    accion:
-
-    document
-    .getElementById(
-        "amparoAccion"
-    )
-    .value,
-
-
-
-    creadoEn:
-
-    new Date()
-    .toISOString()
-
-
-};
-
-
-
-
-
-
-
-amparos.unshift(
-    amparo
-);
-
-
-
-
-saveData(
-    "amparos",
-    amparos
-);
-
-
-
-
-renderAmparos();
-
-
-
-closeModal();
-
-
-
+  closeModal();
 }
 
+// =====================================================
+// ANEXAR OFICIO AUTOMÁTICO
+// =====================================================
 
+function anexarOficioAmparo(id) {
+  const amparo = amparos.find((item) => item.id === id);
 
+  if (!amparo) {
+    return;
+  }
 
+  const oficios = getData("oficios", []);
 
+  const numero = `OF-AUTO-${String(oficios.length + 1).padStart(3, "0")}`;
 
+  const nuevoOficio = {
+    id: createId(),
+    numero,
+    expediente: amparo.expediente,
+    fecha: todayISO(),
+    procedencia: "Amparo",
+    asunto: `Oficio generado automáticamente a partir del amparo promovido por ${amparo.promueve || "—"} (expediente ${amparo.expediente || "—"}).`,
+    estado: "Recibido",
+    creadoEn: new Date().toISOString(),
+  };
 
+  oficios.unshift(nuevoOficio);
+  saveData("oficios", oficios);
 
+  amparo.oficio = amparo.oficio ? `${amparo.oficio}, ${numero}` : numero;
+
+  saveData("amparos", amparos);
+
+  renderAmparos();
+
+  if (window.renderOficios) {
+    window.renderOficios();
+  }
+}
 
 // =====================================================
 // DETALLE
 // =====================================================
 
+export function viewAmparo(id) {
+  const amparo = amparos.find((item) => item.id === id);
 
-export function viewAmparo(
-id
-){
-
-
-
-const amparo =
-amparos.find(
-
-item =>
-
-item.id === id
-
-);
-
-
-
-
-
-if(!amparo){
-
+  if (!amparo) {
     return;
+  }
 
-}
+  const modal = document.getElementById("modalContent");
 
-
-
-
-
-
-
-const modal =
-document.getElementById(
-    "modalContent"
-);
-
-
-
-
-
-modal.innerHTML = `
+  modal.innerHTML = `
 
 
 
@@ -821,7 +472,10 @@ ${escapeHTML(amparo.promueve)}
 
 </div>
 
-
+<div class="detail-item">
+<span>Acto reclamado</span>
+<strong>${escapeHTML(amparo.actoReclamado) || "—"}</strong>
+</div>
 
 
 
@@ -872,7 +526,10 @@ ${escapeHTML(amparo.accion)}
 
 </div>
 
-
+<div class="detail-item">
+<span>Observaciones</span>
+<strong>${escapeHTML(amparo.observaciones) || "—"}</strong>
+</div>
 
 
 </div>
@@ -883,18 +540,5 @@ ${escapeHTML(amparo.accion)}
 
 `;
 
-
-
-
-
-document
-.getElementById(
-    "modal"
-)
-.classList.add(
-    "show"
-);
-
-
-
+  document.getElementById("modal").classList.add("show");
 }

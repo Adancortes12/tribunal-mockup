@@ -1,53 +1,24 @@
+import { createId, escapeHTML } from "../utils.js";
 // =====================================================
 // FORMULARIO AMPARO
 // =====================================================
 
+import { showModal, closeForm } from "./formHelper.js";
 
-import {
-    showModal,
-    closeForm
-}
-from "./formHelper.js";
+import { getData, saveData } from "../storage.js";
 
-
-import {
-    createId
-}
-from "../utils.js";
-
-
-import {
-    getData,
-    saveData
-}
-from "../storage.js";
-
-
-
-
-
-export function initAmparoForm(){
-
-
-    window.openAmparoForm =
-        openAmparoForm;
-
-
+export function initAmparoForm() {
+  window.openAmparoForm = openAmparoForm;
 }
 
+export function openAmparoForm() {
+  const expedientesGuardados = getData("expedientes", []);
 
+  const opcionesExpedientes = expedientesGuardados
+    .map((exp) => `<option value="${escapeHTML(exp.numero)}"></option>`)
+    .join("");
 
-
-
-
-
-
-
-export function openAmparoForm(){
-
-
-
-showModal(`
+  showModal(`
 
 
 <div class="form-header">
@@ -147,30 +118,45 @@ required
 
 <div class="field">
 
-
 <label>
 Número expediente
 </label>
-
 
 <input
 
 id="amparoExpediente"
 
+list="amparoExpedientesList"
+
+autocomplete="off"
+
 required
 
 >
 
+<datalist id="amparoExpedientesList">
+${opcionesExpedientes}
+</datalist>
 
 </div>
 
+<div class="field full">
 
+<label>
+Acto reclamado
+</label>
 
+<textarea
 
+id="amparoActoReclamado"
 
+rows="3"
 
+required
 
+></textarea>
 
+</div>
 
 <div class="field">
 
@@ -253,7 +239,7 @@ id="amparoOficio"
 
 
 <label>
-Qué se tiene que hacer
+Acciones
 </label>
 
 
@@ -269,7 +255,21 @@ rows="4"
 </div>
 
 
+<div class="field full">
 
+<label>
+Observaciones (opcional)
+</label>
+
+<textarea
+
+id="amparoObservaciones"
+
+rows="3"
+
+></textarea>
+
+</div>
 
 
 
@@ -331,171 +331,64 @@ Guardar amparo
 
 `);
 
+  document.getElementById("newAmparoForm").addEventListener(
+    "submit",
 
+    saveAmparo,
+  );
 
+  document.getElementById("amparoExpediente").addEventListener("change", () => {
+    const valor = amparoExpediente.value.trim();
 
+    const encontrado = expedientesGuardados.find((exp) => exp.numero === valor);
 
+    if (!encontrado) {
+      return;
+    }
 
-
-
-document
-.getElementById(
-"newAmparoForm"
-)
-.addEventListener(
-
-"submit",
-
-saveAmparo
-
-);
-
-
-
+    // Solo rellena si el usuario no escribió ya algo
+    if (!amparoPromueve.value.trim()) {
+      amparoPromueve.value = encontrado.actor || "";
+    }
+  });
 }
 
+function saveAmparo(event) {
+  event.preventDefault();
 
+  const amparos = getData("amparos", []);
 
+  const nuevoAmparo = {
+    id: createId(),
 
+    dia: amparoDia.value,
 
+    hora: amparoHora.value,
 
+    expediente: amparoExpediente.value,
 
+    actoReclamado: amparoActoReclamado.value,
 
+    promueve: amparoPromueve.value,
 
-function saveAmparo(
-event
-){
+    juzgado: amparoJuzgado.value,
 
+    oficio: amparoOficio.value,
 
-event.preventDefault();
+    accion: amparoAccion.value,
 
+    observaciones: amparoObservaciones.value,
 
+    creadoEn: new Date().toISOString(),
+  };
 
+  amparos.unshift(nuevoAmparo);
 
+  saveData("amparos", amparos);
 
-const amparos =
-getData(
-"amparos",
-[]
-);
+  closeForm();
 
-
-
-
-
-
-
-const nuevoAmparo = {
-
-
-
-
-id:
-
-createId(),
-
-
-
-
-
-dia:
-
-amparoDia.value,
-
-
-
-
-hora:
-
-amparoHora.value,
-
-
-
-
-expediente:
-
-amparoExpediente.value,
-
-
-
-
-promueve:
-
-amparoPromueve.value,
-
-
-
-
-juzgado:
-
-amparoJuzgado.value,
-
-
-
-
-oficio:
-
-amparoOficio.value,
-
-
-
-
-accion:
-
-amparoAccion.value,
-
-
-
-
-creadoEn:
-
-new Date()
-.toISOString()
-
-
-
-};
-
-
-
-
-
-
-
-amparos.unshift(
-nuevoAmparo
-);
-
-
-
-
-
-
-saveData(
-"amparos",
-amparos
-);
-
-
-
-
-
-
-closeForm();
-
-
-
-
-
-
-if(
-window.renderAmparos
-){
-
-window.renderAmparos();
-
-}
-
-
-
+  if (window.renderAmparos) {
+    window.renderAmparos();
+  }
 }

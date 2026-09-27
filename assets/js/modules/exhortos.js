@@ -542,7 +542,15 @@ ${escapeHTML(exhorto.numero)}
 
 <div class="detail-grid">
 
+<div class="detail-item">
+<span>Tipo de exhorto</span>
+<strong>${exhorto.interno ? "Interno" : "Externo"}</strong>
+</div>
 
+<div class="detail-item">
+<span>Requerimiento o solicitud</span>
+<strong>${escapeHTML(exhorto.requerimiento) || "—"}</strong>
+</div>
 
 <div class="detail-item">
 

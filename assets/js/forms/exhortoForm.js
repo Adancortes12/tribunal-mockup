@@ -119,9 +119,14 @@ id="origenExhorto"
 
 </div>
 
+<div class="field-check">
 
+<label>
+<input type="checkbox" id="exhortoInterno">
+Exhorto interno
+</label>
 
-
+</div>
 
 
 
@@ -258,7 +263,18 @@ Número de expediente y número de oficio
 
 </div>
 
+<div class="field full">
 
+<label>
+Requerimiento o solicitud
+</label>
+
+<textarea
+id="requerimientoExhorto"
+rows="4"
+></textarea>
+
+</div>
 
 
 
@@ -332,23 +348,16 @@ function saveExhorto(event) {
 
   const nuevoExhorto = {
     id: createId(),
-
     numero: numeroExhorto.value,
-
     fecha: fechaExhorto.value,
-
     origen: origenExhorto.value,
-
     actorDemandado: actorDemandado.value,
-
     autoridad: autoridadExhortante.value,
-
+    interno: exhortoInterno.checked,
+    requerimiento: requerimientoExhorto.value,
     promocion: promocionExhorto.value,
-
     estado: estadoExhorto.value,
-
     ubicacion: ubicacionExhorto.value,
-
     creadoEn: new Date().toISOString(),
   };
 

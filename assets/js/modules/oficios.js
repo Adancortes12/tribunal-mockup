@@ -27,6 +27,7 @@ export function initOficios() {
 // =====================================================
 
 export function renderOficios() {
+  oficios = getData("oficios", []);
   const table = document.getElementById("oficiosTable");
 
   if (!table) {
