@@ -1,6 +1,16 @@
-<div class="page">
+<!-- =====================================================
+     PÁGINA AMPAROS
+===================================================== -->
 
-    <div class="page-heading">
+<section class="page amparos-page">
+
+
+    <!-- =================================================
+         ENCABEZADO
+    ================================================== -->
+
+    <div class="amparos-page-header">
+
 
         <div>
 
@@ -13,84 +23,179 @@
             </h1>
 
             <p>
-                Consulta y registra los amparos relacionados con los expedientes.
+                Consulta y administra los amparos relacionados con los expedientes.
             </p>
 
         </div>
 
 
         <button
-            class="primary-btn"
+            type="button"
+            class="primary-btn amparos-new-button"
             data-action="new-amparo"
         >
-            + Nuevo amparo
+
+            <i class="fa-solid fa-plus"></i>
+
+            <span>
+                Nuevo amparo
+            </span>
+
         </button>
+
 
     </div>
 
 
-    <div class="toolbar">
 
-        <div class="toolbar-search">
+    <!-- =================================================
+         CONTENEDOR PRINCIPAL
+    ================================================== -->
 
-            <input
-                type="text"
-                id="amparosSearch"
-                placeholder="Buscar por expediente, promovente u oficio..."
-            >
+    <section class="amparos-records-card">
+
+
+        <!-- =============================================
+             TOOLBAR
+        ============================================== -->
+
+        <div class="amparos-toolbar">
+
+
+            <div>
+
+                <h2>
+                    Amparos registrados
+                </h2>
+
+                <p>
+                    Consulta los amparos capturados en el sistema.
+                </p>
+
+            </div>
+
+
+            <div class="amparos-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    id="amparosSearch"
+                    type="search"
+                    placeholder="Buscar expediente, promovente o juzgado..."
+                    autocomplete="off"
+                >
+
+            </div>
+
 
         </div>
 
-    </div>
 
 
-    <div class="table-container">
+        <!-- =============================================
+             TABLA
+        ============================================== -->
 
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Día
-                    </th>
-
-                    <th>
-                        Hora
-                    </th>
-
-                    <th>
-                        Expediente
-                    </th>
-
-                    <th>
-                        Promueve
-                    </th>
-
-                    <th>
-                        No. juzgado
-                    </th>
-
-                    <th>
-                        No. oficio
-                    </th>
-
-                    <th>
-                        Acción
-                    </th>
-
-                </tr>
-
-            </thead>
+        <div class="amparos-table-container">
 
 
-            <tbody id="amparosTable">
+            <table class="amparos-table">
 
-            </tbody>
 
-        </table>
+                <thead>
 
-    </div>
+                    <tr>
 
-</div>
+                        <th>
+                            Recepción
+                        </th>
+
+                        <th>
+                            Expediente
+                        </th>
+
+                        <th>
+                            Promovente
+                        </th>
+
+                        <th>
+                            No. juzgado
+                        </th>
+
+                        <th>
+                            Acto reclamado
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                        <th>
+                            Acción
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="amparosTable">
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+
+        <!-- =============================================
+             ESTADO VACÍO
+        ============================================== -->
+
+        <div
+            id="amparosEmpty"
+            class="amparos-empty"
+            hidden
+        >
+
+            <div class="amparos-empty-icon">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+            </div>
+
+
+            <h3>
+                No hay amparos registrados
+            </h3>
+
+
+            <p>
+                Los amparos que registres aparecerán en esta sección.
+            </p>
+
+
+            <button
+                type="button"
+                class="secondary-btn"
+                data-action="new-amparo"
+            >
+
+                <i class="fa-solid fa-plus"></i>
+
+                Registrar primer amparo
+
+            </button>
+
+
+        </div>
+
+
+    </section>
+
+
+</section>

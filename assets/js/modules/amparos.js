@@ -1,544 +1,375 @@
-import {
-  createId,
-  escapeHTML,
-  escapeJS,
-  formatDate,
-  todayISO,
-} from "../utils.js";
-
-// =====================================================
-// MODULO AMPAROS
-// =====================================================
+// ============================================================
+// MÓDULO AMPAROS
+// ============================================================
 
 import { getData, saveData } from "../storage.js";
 
-let amparos = [];
+import { escapeHTML } from "../utils.js";
 
-// =====================================================
+// ============================================================
+// ESTADO
+// ============================================================
+
+let currentFilter = "";
+
+// ============================================================
 // INICIALIZAR
-// =====================================================
+// ============================================================
 
-export function initAmparos() {
-  amparos = getData("amparos", []);
-
-  window.openAmparoForm = openAmparoForm;
+export async function initAmparos() {
+  // Permite que amparoForm.js actualice la tabla
+  // inmediatamente después de guardar.
   window.renderAmparos = renderAmparos;
-  window.viewAmparo = viewAmparo;
-  window.anexarOficioAmparo = anexarOficioAmparo;
+
+  await seedAmparosEjemplo();
+
+  bindAmparosEvents();
+
+  renderAmparos();
 }
-// =====================================================
-// RENDER TABLA
-// =====================================================
 
-export function renderAmparos() {
-  const table = document.getElementById("amparosTable");
+// Compatibilidad con el nombre anterior
+export const initAmparosPage = initAmparos;
 
-  if (!table) {
+// ============================================================
+// DATOS DE EJEMPLO
+// ============================================================
+
+async function seedAmparosEjemplo() {
+  const actuales = getData("amparos", []);
+
+  // Si ya existen registros no hacemos nada.
+  if (actuales.length > 0) {
     return;
   }
 
-  if (amparos.length === 0) {
-    table.innerHTML = `
+  try {
+    const url = new URL("../../data/amparos-ejemplo.json", import.meta.url);
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      console.warn("No se pudo cargar amparos-ejemplo.json");
+
+      return;
+    }
+
+    const data = await response.json();
+
+    const ejemplos = Array.isArray(data) ? data : data.amparos || [];
+
+    if (!ejemplos.length) {
+      return;
+    }
+
+    saveData("amparos", ejemplos);
+  } catch (error) {
+    console.error("Error cargando amparos de ejemplo:", error);
+  }
+}
+
+// ============================================================
+// EVENTOS
+// ============================================================
+
+function bindAmparosEvents() {
+  const search = document.getElementById("amparosSearch");
+
+  if (search) {
+    search.oninput = (event) => {
+      currentFilter = event.target.value.trim().toLowerCase();
+
+      renderAmparos();
+    };
+  }
+
+  document.querySelectorAll('[data-action="new-amparo"]').forEach((button) => {
+    button.onclick = () => {
+      if (typeof window.openAmparoForm === "function") {
+        window.openAmparoForm();
+      }
+    };
+  });
+}
+
+// ============================================================
+// RENDER TABLA
+// ============================================================
+
+export function renderAmparos() {
+  const tbody = document.getElementById("amparosTable");
+
+  const empty = document.getElementById("amparosEmpty");
+
+  if (!tbody) {
+    return;
+  }
+
+  // SIEMPRE leemos la versión más reciente.
+  const amparos = getData("amparos", []);
+
+  const filtered = amparos.filter((amparo) => {
+    if (!currentFilter) {
+      return true;
+    }
+
+    const text = `
+
+                    ${amparo.expediente || ""}
+                    ${amparo.promovente || ""}
+                    ${amparo.juzgado || ""}
+                    ${amparo.oficio || ""}
+                    ${amparo.actoReclamado || ""}
+                    ${amparo.estado || ""}
+
+                `.toLowerCase();
+
+    return text.includes(currentFilter);
+  });
+
+  // ========================================================
+  // SIN REGISTROS
+  // ========================================================
+
+  if (!filtered.length) {
+    tbody.innerHTML = "";
+
+    if (empty) {
+      empty.hidden = false;
+    }
+
+    return;
+  }
+
+  if (empty) {
+    empty.hidden = true;
+  }
+
+  // ========================================================
+  // REGISTROS
+  // ========================================================
+
+  tbody.innerHTML = filtered.map((amparo) => createAmparoRow(amparo)).join("");
+
+  bindRowActions();
+}
+
+// ============================================================
+// CREAR FILA
+// ============================================================
+
+function createAmparoRow(amparo) {
+  return `
 
         <tr>
 
-        <td colspan="7">
 
-        No existen amparos registrados.
+            <!-- RECEPCIÓN -->
 
-        </td>
+            <td>
+
+                <div class="amparo-reception-cell">
+
+                    <strong>
+
+                        ${escapeHTML(formatDate(amparo.dia))}
+
+                    </strong>
+
+                    <span>
+
+                        ${escapeHTML(amparo.hora || "—")}
+
+                    </span>
+
+                </div>
+
+            </td>
+
+
+
+            <!-- EXPEDIENTE -->
+
+            <td>
+
+                <span class="amparo-expediente-cell">
+
+                    ${escapeHTML(amparo.expediente || "—")}
+
+                </span>
+
+            </td>
+
+
+
+            <!-- PROMOVENTE -->
+
+            <td>
+
+                ${escapeHTML(amparo.promovente || "—")}
+
+            </td>
+
+
+
+            <!-- JUZGADO -->
+
+            <td>
+
+                ${escapeHTML(amparo.juzgado || "—")}
+
+            </td>
+
+
+
+            <!-- ACTO -->
+
+            <td>
+
+                <div
+                    class="amparo-acto-cell"
+                    title="${escapeHTML(amparo.actoReclamado || "")}"
+                >
+
+                    ${escapeHTML(amparo.actoReclamado || "—")}
+
+                </div>
+
+            </td>
+
+
+
+            <!-- ESTADO -->
+
+            <td>
+
+                <span
+                    class="
+                        amparo-status
+                        ${getStatusClass(amparo.estado)}
+                    "
+                >
+
+                    ${escapeHTML(amparo.estado || "Recibido")}
+
+                </span>
+
+            </td>
+
+
+
+            <!-- ACCIONES -->
+
+            <td>
+
+                <button
+                    type="button"
+                    class="amparo-attach-button"
+                    data-amparo-oficio="${escapeHTML(String(amparo.id))}"
+                >
+
+                    <i class="fa-solid fa-paperclip"></i>
+
+                    <span>
+                        Anexar oficio
+                    </span>
+
+                </button>
+
+            </td>
+
 
         </tr>
 
-        `;
-
-    return;
-  }
-
-  table.innerHTML = amparos
-    .map(
-      (amparo) => `
-
-
-
-<tr>
-
-
-
-<td>
-
-${escapeHTML(formatDate(amparo.dia))}
-
-</td>
-
-
-
-
-<td>
-
-${escapeHTML(amparo.hora)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(amparo.expediente)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(amparo.promueve)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(amparo.juzgado)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(amparo.oficio)}
-
-</td>
-
-
-
-
-
-<td>
-
-<button
-class="table-action"
-onclick="viewAmparo('${escapeJS(amparo.id)}')"
->
-Ver
-</button>
-
-<button
-class="table-action"
-onclick="anexarOficioAmparo('${escapeJS(amparo.id)}')"
->
-Anexar oficio
-</button>
-
-</td>
-</tr>
-
-
-
-`,
-    )
-
-    .join("");
+    `;
 }
 
-// =====================================================
-// FORMULARIO AMPARO
-// =====================================================
-
-export function openAmparoForm() {
-  const modal = document.getElementById("modalContent");
-
-  if (!modal) {
-    return;
-  }
-
-  modal.innerHTML = `
-
-<div class="form-header">
-
-<span>
-Amparos
-</span>
-
-<h2>
-Nuevo amparo
-</h2>
-
-</div>
-
-<div class="form-body">
-
-<form id="amparoForm">
-
-<div class="form-grid">
-
-<div class="field">
-
-<label>
-Día
-</label>
-
-<input
-
-type="date"
-
-id="amparoDia"
-
-required
-
->
-
-</div>
-
-<div class="field">
-
-<label>
-Hora
-</label>
-
-<input
-
-type="time"
-
-id="amparoHora"
-
-required
-
->
-
-</div>
-
-<div class="field">
-
-<label>
-Número expediente
-</label>
-
-<input
-
-id="amparoExpediente"
-
-required
-
->
-
-</div>
-
-<div class="field">
-
-<label>
-Quién promueve
-</label>
-
-<input
-
-id="amparoPromueve"
-
-required
-
->
-
-</div>
-
-<div class="field">
-
-<label>
-Número asignado por juzgado
-</label>
-
-<input
-
-id="amparoJuzgado"
-
->
-
-</div>
-
-<div class="field">
-
-<label>
-Número de oficio registrado
-</label>
-
-<input
-
-id="amparoOficio"
-
->
-
-</div>
-
-<div class="field full">
-
-<label>
-Qué se tiene que hacer
-</label>
-
-<textarea
-
-id="amparoAccion"
-
-rows="4"
-
-></textarea>
-
-</div>
-
-</div>
-
-<div class="form-actions">
-
-<button
-
-type="button"
-
-class="secondary-btn"
-
-onclick="closeModal()"
-
->
-
-Cancelar
-
-</button>
-
-<button
-
-class="primary-btn"
-
->
-
-Guardar amparo
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-`;
-
-  document.getElementById("modal").classList.add("show");
-
-  document.getElementById("amparoForm").addEventListener(
-    "submit",
-
-    saveAmparo,
-  );
+// ============================================================
+// ACCIONES DE FILA
+// ============================================================
+
+function bindRowActions() {
+  document.querySelectorAll("[data-amparo-oficio]").forEach((button) => {
+    button.onclick = () => {
+      anexarOficio(button.dataset.amparoOficio);
+    };
+  });
 }
 
-// =====================================================
-// GUARDAR
-// =====================================================
+// ============================================================
+// ANEXAR OFICIO
+// ============================================================
 
-function saveAmparo(event) {
-  event.preventDefault();
+function anexarOficio(amparoId) {
+  const amparos = getData("amparos", []);
 
-  const amparo = {
-    id: createId(),
-
-    dia: document.getElementById("amparoDia").value,
-
-    hora: document.getElementById("amparoHora").value,
-
-    expediente: document.getElementById("amparoExpediente").value,
-
-    promueve: document.getElementById("amparoPromueve").value,
-
-    juzgado: document.getElementById("amparoJuzgado").value,
-
-    oficio: document.getElementById("amparoOficio").value,
-
-    accion: document.getElementById("amparoAccion").value,
-
-    creadoEn: new Date().toISOString(),
-  };
-
-  amparos.unshift(amparo);
-
-  saveData("amparos", amparos);
-
-  renderAmparos();
-
-  closeModal();
-}
-
-// =====================================================
-// ANEXAR OFICIO AUTOMÁTICO
-// =====================================================
-
-function anexarOficioAmparo(id) {
-  const amparo = amparos.find((item) => item.id === id);
+  const amparo = amparos.find((item) => String(item.id) === String(amparoId));
 
   if (!amparo) {
+    alert("No se encontró el amparo.");
+
     return;
   }
 
-  const oficios = getData("oficios", []);
+  const context = {
+    origen: "amparo",
 
-  const numero = `OF-AUTO-${String(oficios.length + 1).padStart(3, "0")}`;
+    amparoId: amparo.id,
 
-  const nuevoOficio = {
-    id: createId(),
-    numero,
     expediente: amparo.expediente,
-    fecha: todayISO(),
-    procedencia: "Amparo",
-    asunto: `Oficio generado automáticamente a partir del amparo promovido por ${amparo.promueve || "—"} (expediente ${amparo.expediente || "—"}).`,
-    estado: "Recibido",
-    creadoEn: new Date().toISOString(),
+
+    promovente: amparo.promovente,
+
+    juzgado: amparo.juzgado,
+
+    actoReclamado: amparo.actoReclamado,
   };
 
-  oficios.unshift(nuevoOficio);
-  saveData("oficios", oficios);
+  sessionStorage.setItem("oficioAmparoContext", JSON.stringify(context));
 
-  amparo.oficio = amparo.oficio ? `${amparo.oficio}, ${numero}` : numero;
-
-  saveData("amparos", amparos);
-
-  renderAmparos();
-
-  if (window.renderOficios) {
-    window.renderOficios();
+  if (typeof window.openOficioForm === "function") {
+    window.openOficioForm(context);
+  } else {
+    alert("El formulario de Oficios todavía no está inicializado.");
   }
 }
 
-// =====================================================
-// DETALLE
-// =====================================================
+// ============================================================
+// ESTADO
+// ============================================================
 
-export function viewAmparo(id) {
-  const amparo = amparos.find((item) => item.id === id);
+function getStatusClass(estado = "") {
+  const value = estado.toLowerCase().trim();
 
-  if (!amparo) {
-    return;
+  if (value === "en trámite" || value === "en tramite") {
+    return "amparo-status-tramite";
   }
 
-  const modal = document.getElementById("modalContent");
+  if (value === "pendiente") {
+    return "amparo-status-pendiente";
+  }
 
-  modal.innerHTML = `
+  if (value === "concluido") {
+    return "amparo-status-concluido";
+  }
 
+  return "amparo-status-recibido";
+}
 
+// ============================================================
+// FECHA
+// ============================================================
 
-<div class="form-header">
+function formatDate(value) {
+  if (!value) {
+    return "—";
+  }
 
+  const parts = value.split("-");
 
-<span>
-Detalle amparo
-</span>
+  if (parts.length !== 3) {
+    return value;
+  }
 
-
-<h2>
-Expediente ${escapeHTML(amparo.expediente)}
-</h2>
-
-
-</div>
-
-
-
-
-
-
-<div class="form-body">
-
-
-<div class="detail-grid">
-
-
-
-<div class="detail-item">
-
-<span>
-Promueve
-</span>
-
-
-<strong>
-${escapeHTML(amparo.promueve)}
-</strong>
-
-</div>
-
-<div class="detail-item">
-<span>Acto reclamado</span>
-<strong>${escapeHTML(amparo.actoReclamado) || "—"}</strong>
-</div>
-
-
-
-<div class="detail-item">
-
-<span>
-Juzgado
-</span>
-
-
-<strong>
-${escapeHTML(amparo.juzgado)}
-</strong>
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Oficio
-</span>
-
-
-<strong>
-${escapeHTML(amparo.oficio)}
-</strong>
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Acción requerida
-</span>
-
-
-<strong>
-${escapeHTML(amparo.accion)}
-</strong>
-
-</div>
-
-<div class="detail-item">
-<span>Observaciones</span>
-<strong>${escapeHTML(amparo.observaciones) || "—"}</strong>
-</div>
-
-
-</div>
-
-
-</div>
-
-
-`;
-
-  document.getElementById("modal").classList.add("show");
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }

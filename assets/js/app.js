@@ -3,398 +3,174 @@
 // Sistema Tribunal
 // =====================================================
 
+import { setupModal } from "./modal.js";
 
-import {
-    setupModal
-}
-from "./modal.js";
-
-
-import {
-    initRouter,
-    navigate
-}
-from "./router.js";
-
+import { initRouter, navigate } from "./router.js";
 
 // Dashboard
 
-import {
-    initDashboard
-}
-from "./dashboard/home.js";
+import { initDashboard } from "./dashboard/home.js";
 
+import { initResumen } from "./dashboard/resumen.js";
 
-import {
-    initResumen
-}
-from "./dashboard/resumen.js";
-
-
-import {
-    initHistorico
-}
-from "./dashboard/historico.js";
-
-
+//import { initHistorico } from "./dashboard/historico.js";
 
 // Modules
+import { initHistorico } from "./modules/historico.js";
 
-import {
-    initExpedientes
-}
-from "./modules/expedientes.js";
+import { initExpedientes } from "./modules/expedientes.js";
 
+import { initDemandas } from "./modules/demandas.js";
 
-import {
-    initDemandas
-}
-from "./modules/demandas.js";
+import { initAmparosPage } from "./modules/amparos.js";
 
+import { initExhortos } from "./modules/exhortos.js";
 
-import {
-    initAmparos
-}
-from "./modules/amparos.js";
+import { initPromociones } from "./modules/promociones.js";
 
-
-import {
-    initExhortos
-}
-from "./modules/exhortos.js";
-
-
-import {
-    initPromociones
-}
-from "./modules/promociones.js";
-
-
-import {
-    initOficios
-}
-from "./modules/oficios.js";
-
-
-
+import { initOficios } from "./modules/oficios.js";
 
 // Forms
 
-import {
-    initExpedienteForm
-}
-from "./forms/expedienteForm.js";
+import { initExpedienteForm } from "./forms/expedienteForm.js";
 
+import { initDemandaForm } from "./forms/demandaForm.js";
 
-import {
-    initDemandaForm
-}
-from "./forms/demandaForm.js";
+import { initAmparoForm } from "./forms/amparoForm.js";
 
+import { initExhortoForm } from "./forms/exhortoForm.js";
 
-import {
-    initAmparoForm
-}
-from "./forms/amparoForm.js";
+import { initPromocionForm } from "./forms/promocionForm.js";
 
-
-import {
-    initExhortoForm
-}
-from "./forms/exhortoForm.js";
-
-
-import {
-    initPromocionForm
-}
-from "./forms/promocionForm.js";
-
-
-import {
-    initOficioForm
-}
-from "./forms/oficioForm.js";
-
-
-
-
-
-
+import { initOficioForm } from "./forms/oficioForm.js";
 
 // =====================================================
 // CARGAR COMPONENTES
 // =====================================================
 
+async function loadComponent(id, file) {
+  const container = document.getElementById(id);
 
-async function loadComponent(
-    id,
-    file
-){
+  if (!container) {
+    return;
+  }
 
+  const response = await fetch(file);
 
-    const container =
-        document.getElementById(id);
+  const html = await response.text();
 
-
-
-    if(!container){
-
-        return;
-
-    }
-
-
-
-    const response =
-        await fetch(file);
-
-
-
-    const html =
-        await response.text();
-
-
-
-    container.innerHTML =
-        html;
-
-
+  container.innerHTML = html;
+  
 }
 
+async function loadLayout() {
+  await loadComponent("sidebar-container", "components/sidebar.html");
 
+  await loadComponent("navbar-container", "components/navbar.html");
 
-
-
-
-
-
-async function loadLayout(){
-
-
-    await loadComponent(
-        "sidebar-container",
-        "components/sidebar.html"
-    );
-
-
-    await loadComponent(
-        "navbar-container",
-        "components/navbar.html"
-    );
-
-
-    await loadComponent(
-        "modal-container",
-        "components/modal.html"
-    );
-
-
+  await loadComponent("modal-container", "components/modal.html");
 }
-
-
-
-
-
-
-
 
 // =====================================================
 // INICIALIZAR MODULOS
 // =====================================================
 
+function initModules() {
+  initDashboard();
 
-function initModules(){
+  initResumen();
 
+  initExpedientes();
 
-    initDashboard();
+  initDemandas();
 
-    initResumen();
+  initAmparosPage();
 
-    initHistorico();
+  initExhortos();
 
+  initPromociones();
 
+  initOficios();
 
-    initExpedientes();
+  initExpedienteForm();
 
-    initDemandas();
+  initDemandaForm();
 
-    initAmparos();
+  initAmparoForm();
 
-    initExhortos();
+  initExhortoForm();
 
-    initPromociones();
+  initPromocionForm();
 
-    initOficios();
-
-
-
-    initExpedienteForm();
-
-    initDemandaForm();
-
-    initAmparoForm();
-
-    initExhortoForm();
-
-    initPromocionForm();
-
-    initOficioForm();
-
-
+  initOficioForm();
 }
-
-
-
-
-
-
-
-
 
 // =====================================================
 // EVENTOS
 // =====================================================
 
+function setupEvents() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-action]");
 
-function setupEvents(){
+    if (!button) {
+      return;
+    }
 
+    const action = button.dataset.action;
 
-document.addEventListener(
-"click",
-event=>{
+    switch (action) {
+      case "new-expediente":
+        window.openNewExpediente();
 
+        break;
 
-const button =
-event.target.closest(
-"[data-action]"
-);
+      case "new-demanda":
+        window.openDemandaForm();
 
+        break;
 
+      case "new-amparo":
+        window.openAmparoForm();
 
-if(!button){
+        break;
 
-return;
+      case "new-exhorto":
+        window.openExhortoForm();
 
+        break;
+
+      case "new-promocion":
+        window.openPromocionForm();
+
+        break;
+
+      case "new-oficio":
+        window.openOficioForm();
+
+        break;
+    }
+  });
 }
-
-
-
-const action =
-button.dataset.action;
-
-
-
-switch(action){
-
-
-
-case "new-expediente":
-
-window.openNewExpediente();
-
-break;
-
-
-
-case "new-demanda":
-
-window.openDemandaForm();
-
-break;
-
-
-
-case "new-amparo":
-
-window.openAmparoForm();
-
-break;
-
-
-
-case "new-exhorto":
-
-window.openExhortoForm();
-
-break;
-
-
-
-case "new-promocion":
-
-window.openPromocionForm();
-
-break;
-
-
-
-case "new-oficio":
-
-window.openOficioForm();
-
-break;
-
-
-
-}
-
-
-
-}
-
-);
-
-
-
-}
-
-
-
-
-
-
-
-
 
 // =====================================================
 // INICIO
 // =====================================================
 
+async function init() {
+  await loadLayout();
 
-async function init(){
+  setupModal();
 
+  initRouter();
 
+  initModules();
 
-await loadLayout();
+  setupEvents();
 
+  // cargar inicio
 
-
-setupModal();
-
-
-
-initRouter();
-
-
-
-initModules();
-
-
-
-setupEvents();
-
-
-
-// cargar inicio
-
-navigate(
-"dashboard"
-);
-
-
-
+  navigate("dashboard");
 }
-
-
 
 init();

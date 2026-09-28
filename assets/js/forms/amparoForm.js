@@ -1,394 +1,1135 @@
-import { createId, escapeHTML } from "../utils.js";
-// =====================================================
-// FORMULARIO AMPARO
-// =====================================================
+// ============================================================
+// FORMULARIO DE AMPARO
+// ============================================================
 
-import { showModal, closeForm } from "./formHelper.js";
+import {
+    showModal,
+    closeForm
+} from "./formHelper.js";
 
-import { getData, saveData } from "../storage.js";
+import {
+    createId,
+    escapeHTML
+} from "../utils.js";
+
+import {
+    getData,
+    saveData
+} from "../storage.js";
+
+
+// ============================================================
+// DATOS
+// ============================================================
+
+let expedientesReferencia = [];
+
+
+// ============================================================
+// INIT
+// ============================================================
 
 export function initAmparoForm() {
-  window.openAmparoForm = openAmparoForm;
+
+    window.openAmparoForm =
+        openAmparoForm;
+
 }
 
-export function openAmparoForm() {
-  const expedientesGuardados = getData("expedientes", []);
 
-  const opcionesExpedientes = expedientesGuardados
-    .map((exp) => `<option value="${escapeHTML(exp.numero)}"></option>`)
-    .join("");
+// ============================================================
+// CARGAR EXPEDIENTES
+// ============================================================
 
-  showModal(`
+async function loadExpedientesReference() {
 
+    let ejemplos = [];
 
-<div class="form-header">
+    try {
 
+        const url =
+            new URL(
+                "../../data/expedientes-ejemplo.json",
+                import.meta.url
+            );
 
-<span>
-Amparos
-</span>
+        const response =
+            await fetch(url);
 
+        if (response.ok) {
 
-<h2>
-Nuevo amparo
-</h2>
+            const data =
+                await response.json();
 
+            ejemplos =
+                data.expedientes || [];
 
-</div>
+        }
 
+    }
+    catch (error) {
 
+        console.warn(
+            "No se pudo cargar expedientes-ejemplo.json",
+            error
+        );
 
-
-
-<div class="form-body">
-
-
-<form id="newAmparoForm">
-
-
-
-
-
-
-<div class="form-grid">
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Día
-</label>
-
-
-<input
-
-type="date"
-
-id="amparoDia"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Hora
-</label>
-
-
-<input
-
-type="time"
-
-id="amparoHora"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="field">
-
-<label>
-Número expediente
-</label>
-
-<input
-
-id="amparoExpediente"
-
-list="amparoExpedientesList"
-
-autocomplete="off"
-
-required
-
->
-
-<datalist id="amparoExpedientesList">
-${opcionesExpedientes}
-</datalist>
-
-</div>
-
-<div class="field full">
-
-<label>
-Acto reclamado
-</label>
-
-<textarea
-
-id="amparoActoReclamado"
-
-rows="3"
-
-required
-
-></textarea>
-
-</div>
-
-<div class="field">
-
-
-<label>
-Quién promueve el amparo
-</label>
-
-
-<input
-
-id="amparoPromueve"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número asignado por juzgado
-</label>
-
-
-<input
-
-id="amparoJuzgado"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número de oficio registrado
-</label>
-
-
-<input
-
-id="amparoOficio"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="field full">
-
-
-<label>
-Acciones
-</label>
-
-
-<textarea
-
-id="amparoAccion"
-
-rows="4"
-
-></textarea>
-
-
-</div>
-
-
-<div class="field full">
-
-<label>
-Observaciones (opcional)
-</label>
-
-<textarea
-
-id="amparoObservaciones"
-
-rows="3"
-
-></textarea>
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="form-actions">
-
-
-
-<button
-
-type="button"
-
-class="secondary-btn"
-
-onclick="closeForm()"
-
->
-
-Cancelar
-
-</button>
-
-
-
-
-
-<button
-
-class="primary-btn"
-
->
-
-Guardar amparo
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-</form>
-
-
-</div>
-
-
-`);
-
-  document.getElementById("newAmparoForm").addEventListener(
-    "submit",
-
-    saveAmparo,
-  );
-
-  document.getElementById("amparoExpediente").addEventListener("change", () => {
-    const valor = amparoExpediente.value.trim();
-
-    const encontrado = expedientesGuardados.find((exp) => exp.numero === valor);
-
-    if (!encontrado) {
-      return;
     }
 
-    // Solo rellena si el usuario no escribió ya algo
-    if (!amparoPromueve.value.trim()) {
-      amparoPromueve.value = encontrado.actor || "";
-    }
-  });
+
+    // También usamos los expedientes creados
+    // dentro de la aplicación.
+
+    const locales =
+        getData(
+            "expedientes",
+            []
+        );
+
+
+    const mapa =
+        new Map();
+
+
+    [
+        ...ejemplos,
+        ...locales
+    ].forEach(
+        expediente => {
+
+            const numero =
+                expediente.numero ||
+                expediente.expediente;
+
+            if (!numero) {
+                return;
+            }
+
+            mapa.set(
+                String(numero).toLowerCase(),
+                {
+                    ...expediente,
+                    numero
+                }
+            );
+
+        }
+    );
+
+
+    expedientesReferencia =
+        Array.from(
+            mapa.values()
+        );
+
 }
 
-function saveAmparo(event) {
-  event.preventDefault();
 
-  const amparos = getData("amparos", []);
+// ============================================================
+// ABRIR FORMULARIO
+// ============================================================
 
-  const nuevoAmparo = {
-    id: createId(),
+export async function openAmparoForm() {
 
-    dia: amparoDia.value,
+    await loadExpedientesReference();
 
-    hora: amparoHora.value,
 
-    expediente: amparoExpediente.value,
+    showModal(`
 
-    actoReclamado: amparoActoReclamado.value,
+        <div class="amparo-form-shell">
 
-    promueve: amparoPromueve.value,
 
-    juzgado: amparoJuzgado.value,
+            <!-- =============================================
+                 HEADER
+            ============================================== -->
 
-    oficio: amparoOficio.value,
+            <header class="amparo-form-header">
 
-    accion: amparoAccion.value,
+                <span class="amparo-eyebrow">
+                    AMPAROS
+                </span>
 
-    observaciones: amparoObservaciones.value,
+                <h2>
+                    Registrar nuevo amparo
+                </h2>
 
-    creadoEn: new Date().toISOString(),
-  };
+                <p>
+                    Captura la información del amparo y relaciónala
+                    con un expediente existente.
+                </p>
 
-  amparos.unshift(nuevoAmparo);
+            </header>
 
-  saveData("amparos", amparos);
 
-  closeForm();
 
-  if (window.renderAmparos) {
-    window.renderAmparos();
-  }
+            <form id="amparoFormElement">
+
+
+                <div class="amparo-form-content">
+
+
+                    <!-- =====================================
+                         1. RECEPCIÓN
+                    ====================================== -->
+
+                    <section class="amparo-section">
+
+
+                        <div class="amparo-section-header">
+
+                            <span class="amparo-section-number">
+                                1
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    Recepción
+                                </h3>
+
+                                <p>
+                                    Fecha, hora y expediente relacionado.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="amparo-grid amparo-grid-three">
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampDia">
+                                    Día
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    id="ampDia"
+                                    type="date"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampHora">
+                                    Hora
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    id="ampHora"
+                                    type="time"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampExp">
+                                    Número de expediente
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    id="ampExp"
+                                    type="text"
+                                    placeholder="Ej. 124/2026"
+                                    autocomplete="off"
+                                    required
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- INFORMACIÓN DEL EXPEDIENTE -->
+
+                        <div
+                            id="ampExpedienteInfo"
+                            class="amparo-expediente-info"
+                            hidden
+                        >
+
+                        </div>
+
+
+                    </section>
+
+
+
+                    <!-- =====================================
+                         2. INFORMACIÓN DEL AMPARO
+                    ====================================== -->
+
+                    <section class="amparo-section">
+
+
+                        <div class="amparo-section-header">
+
+                            <span class="amparo-section-number">
+                                2
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    Información del amparo
+                                </h3>
+
+                                <p>
+                                    Datos proporcionados por el juzgado.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="amparo-grid">
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampPromueve">
+                                    Quién promueve el amparo
+                                    <span>*</span>
+                                </label>
+
+                                <input
+                                    id="ampPromueve"
+                                    type="text"
+                                    placeholder="Nombre del promovente"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampJuzgado">
+                                    Número asignado por juzgado
+                                </label>
+
+                                <input
+                                    id="ampJuzgado"
+                                    type="text"
+                                    placeholder="Ej. 843/2026"
+                                >
+
+                            </div>
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampOficio">
+                                    Número de oficio registrado
+                                </label>
+
+                                <input
+                                    id="ampOficio"
+                                    type="text"
+                                    placeholder="Ej. TAE-SA-0142/2026"
+                                >
+
+                            </div>
+
+
+                            <div class="amparo-field">
+
+                                <label for="ampEstado">
+                                    Estado
+                                </label>
+
+                                <select id="ampEstado">
+
+                                    <option value="Recibido">
+                                        Recibido
+                                    </option>
+
+                                    <option value="En trámite">
+                                        En trámite
+                                    </option>
+
+                                    <option value="Pendiente">
+                                        Pendiente
+                                    </option>
+
+                                    <option value="Concluido">
+                                        Concluido
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </section>
+
+
+
+                    <!-- =====================================
+                         3. ACTO RECLAMADO
+                    ====================================== -->
+
+                    <section class="amparo-section">
+
+
+                        <div class="amparo-section-header">
+
+                            <span class="amparo-section-number">
+                                3
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    Acto reclamado
+                                </h3>
+
+                                <p>
+                                    Registra el acto que da origen al amparo.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="amparo-grid">
+
+
+                            <div class="amparo-field full">
+
+                                <label for="ampActoReclamado">
+                                    Acto reclamado
+                                    <span>*</span>
+                                </label>
+
+                                <textarea
+                                    id="ampActoReclamado"
+                                    rows="3"
+                                    placeholder="Describe el acto reclamado..."
+                                    required
+                                ></textarea>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </section>
+
+
+
+                    <!-- =====================================
+                         4. ACCIONES
+                    ====================================== -->
+
+                    <section class="amparo-section">
+
+
+                        <div class="amparo-section-header">
+
+                            <span class="amparo-section-number">
+                                4
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    Acciones a realizar
+                                </h3>
+
+                                <p>
+                                    Indica qué deberá realizarse para atender el amparo.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="amparo-grid">
+
+
+                            <div class="amparo-field full">
+
+                                <label for="ampAcciones">
+                                    Acciones
+                                    <span>*</span>
+                                </label>
+
+                                <textarea
+                                    id="ampAcciones"
+                                    rows="3"
+                                    placeholder="Describe las acciones a realizar..."
+                                    required
+                                ></textarea>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </section>
+
+
+
+                    <!-- =====================================
+                         5. OBSERVACIONES
+                    ====================================== -->
+
+                    <section class="amparo-section">
+
+
+                        <div class="amparo-section-header">
+
+                            <span class="amparo-section-number">
+                                5
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    Observaciones
+                                </h3>
+
+                                <p>
+                                    Información adicional del registro.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="amparo-grid">
+
+
+                            <div class="amparo-field full">
+
+                                <label for="ampObservaciones">
+                                    Observaciones
+                                </label>
+
+                                <textarea
+                                    id="ampObservaciones"
+                                    rows="3"
+                                    placeholder="Observaciones adicionales..."
+                                ></textarea>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </section>
+
+
+                </div>
+
+
+
+                <!-- =========================================
+                     FOOTER
+                ========================================== -->
+
+                <footer class="amparo-form-footer">
+
+
+                    <button
+                        type="button"
+                        class="amparo-btn-secondary"
+                        id="cancelAmparoBtn"
+                    >
+                        Cancelar
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        class="amparo-btn-primary"
+                    >
+
+                        <i class="fa-solid fa-check"></i>
+
+                        Registrar amparo
+
+                    </button>
+
+
+                </footer>
+
+
+            </form>
+
+
+        </div>
+
+    `);
+
+
+    setCurrentDateTime();
+
+    setupExpedienteLookup();
+
+    setupCancel();
+
+    setupSubmit();
+
+}
+
+
+// ============================================================
+// FECHA Y HORA ACTUAL
+// ============================================================
+
+function setCurrentDateTime() {
+
+    const now =
+        new Date();
+
+
+    const year =
+        now.getFullYear();
+
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const hours =
+        String(
+            now.getHours()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const minutes =
+        String(
+            now.getMinutes()
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const dateInput =
+        document.getElementById(
+            "ampDia"
+        );
+
+
+    const timeInput =
+        document.getElementById(
+            "ampHora"
+        );
+
+
+    if (dateInput) {
+
+        dateInput.value =
+            `${year}-${month}-${day}`;
+
+    }
+
+
+    if (timeInput) {
+
+        timeInput.value =
+            `${hours}:${minutes}`;
+
+    }
+
+}
+
+
+// ============================================================
+// BUSCAR EXPEDIENTE
+// ============================================================
+
+function setupExpedienteLookup() {
+
+    const input =
+        document.getElementById(
+            "ampExp"
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    input.addEventListener(
+        "blur",
+        buscarExpediente
+    );
+
+
+    input.addEventListener(
+        "change",
+        buscarExpediente
+    );
+
+}
+
+
+function buscarExpediente() {
+
+    const numero =
+        document
+            .getElementById(
+                "ampExp"
+            )
+            ?.value
+            .trim();
+
+
+    if (!numero) {
+
+        hideExpedienteInfo();
+
+        return;
+
+    }
+
+
+    const expediente =
+        expedientesReferencia.find(
+            item =>
+                String(
+                    item.numero
+                )
+                .toLowerCase()
+                ===
+                numero.toLowerCase()
+        );
+
+
+    if (!expediente) {
+
+        renderExpedienteNotFound();
+
+        return;
+
+    }
+
+
+    completarDatosExpediente(
+        expediente
+    );
+
+}
+
+
+// ============================================================
+// AUTOLLENADO
+// ============================================================
+
+function completarDatosExpediente(
+    expediente
+) {
+
+    const promovente =
+        document.getElementById(
+            "ampPromueve"
+        );
+
+
+    const oficio =
+        document.getElementById(
+            "ampOficio"
+        );
+
+
+    if (
+        promovente &&
+        !promovente.value.trim()
+    ) {
+
+        promovente.value =
+            expediente.promoventeSugerido ||
+            "";
+
+    }
+
+
+    if (
+        oficio &&
+        !oficio.value.trim()
+    ) {
+
+        oficio.value =
+            expediente.ultimoOficio ||
+            "";
+
+    }
+
+
+    const container =
+        document.getElementById(
+            "ampExpedienteInfo"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    container.hidden =
+        false;
+
+
+    container.className =
+        "amparo-expediente-info success";
+
+
+    container.innerHTML = `
+
+        <div class="amparo-expediente-status">
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            Expediente encontrado
+
+        </div>
+
+
+        <div class="amparo-expediente-grid">
+
+
+            <div>
+
+                <span>
+                    Actor
+                </span>
+
+                <strong>
+                    ${escapeHTML(
+                        expediente.actor ||
+                        "—"
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Demandado
+                </span>
+
+                <strong>
+                    ${escapeHTML(
+                        expediente.demandado ||
+                        "—"
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Estado
+                </span>
+
+                <strong>
+                    ${escapeHTML(
+                        expediente.estado ||
+                        "—"
+                    )}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Ubicación
+                </span>
+
+                <strong>
+                    ${escapeHTML(
+                        expediente.ubicacion ||
+                        "—"
+                    )}
+                </strong>
+
+            </div>
+
+
+        </div>
+
+    `;
+
+}
+
+
+function renderExpedienteNotFound() {
+
+    const container =
+        document.getElementById(
+            "ampExpedienteInfo"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    container.hidden =
+        false;
+
+
+    container.className =
+        "amparo-expediente-info warning";
+
+
+    container.innerHTML = `
+
+        <div class="amparo-expediente-status">
+
+            <i class="fa-solid fa-circle-exclamation"></i>
+
+            No se encontró un expediente con ese número.
+
+        </div>
+
+    `;
+
+}
+
+
+function hideExpedienteInfo() {
+
+    const container =
+        document.getElementById(
+            "ampExpedienteInfo"
+        );
+
+
+    if (container) {
+
+        container.hidden = true;
+
+    }
+
+}
+
+
+// ============================================================
+// CANCELAR
+// ============================================================
+
+function setupCancel() {
+
+    document
+        .getElementById(
+            "cancelAmparoBtn"
+        )
+        ?.addEventListener(
+            "click",
+            closeForm
+        );
+
+}
+
+
+// ============================================================
+// SUBMIT
+// ============================================================
+
+function setupSubmit() {
+
+    document
+        .getElementById(
+            "amparoFormElement"
+        )
+        ?.addEventListener(
+            "submit",
+            saveAmparo
+        );
+
+}
+
+
+// ============================================================
+// GUARDAR AMPARO
+// ============================================================
+
+function saveAmparo(
+    event
+) {
+
+    event.preventDefault();
+
+
+    const amparos =
+        getData(
+            "amparos",
+            []
+        );
+
+
+    const nuevoAmparo = {
+
+        id:
+            createId(),
+
+        dia:
+            document
+                .getElementById(
+                    "ampDia"
+                )
+                .value,
+
+        hora:
+            document
+                .getElementById(
+                    "ampHora"
+                )
+                .value,
+
+        expediente:
+            document
+                .getElementById(
+                    "ampExp"
+                )
+                .value
+                .trim(),
+
+        promovente:
+            document
+                .getElementById(
+                    "ampPromueve"
+                )
+                .value
+                .trim(),
+
+        juzgado:
+            document
+                .getElementById(
+                    "ampJuzgado"
+                )
+                .value
+                .trim(),
+
+        oficio:
+            document
+                .getElementById(
+                    "ampOficio"
+                )
+                .value
+                .trim(),
+
+        actoReclamado:
+            document
+                .getElementById(
+                    "ampActoReclamado"
+                )
+                .value
+                .trim(),
+
+        acciones:
+            document
+                .getElementById(
+                    "ampAcciones"
+                )
+                .value
+                .trim(),
+
+        observaciones:
+            document
+                .getElementById(
+                    "ampObservaciones"
+                )
+                .value
+                .trim(),
+
+        estado:
+            document
+                .getElementById(
+                    "ampEstado"
+                )
+                .value,
+
+        creadoEn:
+            new Date()
+                .toISOString()
+
+    };
+
+
+    amparos.unshift(
+        nuevoAmparo
+    );
+
+
+    saveData(
+        "amparos",
+        amparos
+    );
+
+
+    closeForm();
+
+
+    if (
+        window.renderAmparos
+    ) {
+
+        window.renderAmparos();
+
+    }
+
+
+    if (
+        window.initDashboardPage
+    ) {
+
+        window.initDashboardPage();
+
+    }
+
 }
