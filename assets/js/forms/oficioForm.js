@@ -16,6 +16,9 @@ import { createId, escapeHTML } from "../utils.js";
 
 import { getData, saveData } from "../storage.js";
 
+// Usuario simulado conectado en la sesión activa
+const USUARIO_ACTIVO = "Lic. Juan Pérez (Administración)";
+
 // Contexto con el que se abrió el formulario (p. ej. "Anexar oficio"
 // desde Amparos). null = oficio normal.
 let oficioContext = null;
@@ -77,7 +80,7 @@ export function openOficioForm(context = null) {
           selectField({
             id: "estadoOficio",
             label: "Estado",
-            options: ["Recibido", "En revisión", "Atendido"],
+            options: ["Pendiente", "Recibido", "En revisión", "Atendido"],
           }),
         ],
       }),
@@ -99,6 +102,39 @@ export function openOficioForm(context = null) {
 
   // Se ejecuta DESPUÉS de que el formulario ya existe en el DOM.
   applyOficioContext();
+  setupEstadoListener();
+}
+
+// Escucha el cambio de selección del estado e inyecta la leyenda tenue
+function setupEstadoListener() {
+  const selectEstado = document.getElementById("estadoOficio");
+  if (!selectEstado) return;
+
+  // Insertar contenedor dinámico debajo del select si no existe
+  let infoContainer = document.getElementById("recibidoInfoContainer");
+  if (!infoContainer) {
+    const parentField = selectEstado.closest(".field") || selectEstado.parentElement;
+    infoContainer = document.createElement("div");
+    infoContainer.id = "recibidoInfoContainer";
+    infoContainer.style.marginTop = "6px";
+    parentField.appendChild(infoContainer);
+  }
+
+  const renderInfo = () => {
+    if (selectEstado.value === "Recibido") {
+      infoContainer.innerHTML = `
+        <div class="recepcion-subtext">
+          <span class="label-recibido">Recibido por:</span>
+          <span class="value-recibido">${escapeHTML(USUARIO_ACTIVO)}</span>
+        </div>
+      `;
+    } else {
+      infoContainer.innerHTML = "";
+    }
+  };
+
+  selectEstado.addEventListener("change", renderInfo);
+  renderInfo(); // Ejecutar al abrir por si el valor inicial es "Recibido"
 }
 
 // Precarga los datos del amparo sin pisar lo que ya haya escrito
@@ -124,9 +160,6 @@ function applyOficioContext() {
 
   setIfEmpty("expedienteOficio", oficioContext.expediente);
 
-  // En un amparo, "juzgado" es el NÚMERO asignado por el juzgado
-  // (ej. 843/2026), no una dependencia; por eso va en el asunto
-  // y no en "Procedencia".
   const asunto = [
     "Amparo",
     oficioContext.juzgado || "",
@@ -141,7 +174,6 @@ function applyOficioContext() {
     .filter(Boolean)
     .join(" · ");
 
-  // Estilos en línea con la paleta del README (aún no existe oficios.css)
   form.insertAdjacentHTML(
     "afterbegin",
     `<div style="margin-bottom:12px;padding:10px 12px;border:1px solid #dce3ea;border-radius:7px;background:#e8f1ff;color:#102b45;font-size:13px;">
@@ -156,21 +188,27 @@ function saveOficio(event) {
   event.preventDefault();
 
   const oficios = getData("oficios", []);
+  const estadoVal = document.getElementById("estadoOficio")?.value || "Pendiente";
+  const esRecibido = estadoVal === "Recibido";
 
   const nuevoOficio = {
     id: createId(),
 
-    numero: numeroOficio.value,
+    numero: document.getElementById("numeroOficio")?.value || "",
 
-    expediente: expedienteOficio.value,
+    expediente: document.getElementById("expedienteOficio")?.value || "",
 
-    fecha: fechaOficio.value,
+    fecha: document.getElementById("fechaOficio")?.value || "",
 
-    procedencia: procedenciaOficio.value,
+    procedencia: document.getElementById("procedenciaOficio")?.value || "",
 
-    asunto: asuntoOficio.value,
+    asunto: document.getElementById("asuntoOficio")?.value || "",
 
-    estado: estadoOficio.value,
+    estado: estadoVal,
+
+    recibidoPor: esRecibido ? USUARIO_ACTIVO : "",
+
+    fechaRecepcion: esRecibido ? new Date().toISOString() : null,
 
     creadoEn: new Date().toISOString(),
   };
@@ -202,7 +240,6 @@ function saveOficio(event) {
 }
 
 // Si el amparo aún no tiene número de oficio, se le asigna el nuevo.
-// Nunca se sobrescribe un número ya capturado.
 function linkOficioToAmparo(oficio) {
   if (!oficio.amparoId) {
     return;
