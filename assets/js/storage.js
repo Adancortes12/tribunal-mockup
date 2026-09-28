@@ -23,6 +23,18 @@ export function getData(key, fallback = []) {
   }
 }
 
+// Obtiene la lista actualizada de nombres de entes que están activos
+export function getEntesActivos() {
+  const entes = getData("entes", []);
+  
+  // Si aún no se han cargado en localStorage, se retorna arreglo vacío 
+  // o la lista activa
+  return entes
+    .filter((ente) => ente.activo)
+    .map((ente) => ente.nombre);
+}
+
+
 export function removeData(key) {
   localStorage.removeItem(key);
 }

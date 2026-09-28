@@ -22,6 +22,8 @@ import { renderOficios } from "./modules/oficios.js";
 // import { renderHistorico } from "./dashboard/historico.js";
 import { initHistorico } from "./modules/historico.js";
 
+import { renderCatalogos } from "./modules/catalogos.js";
+
 // =====================================================
 // RUTAS
 // =====================================================
@@ -42,6 +44,8 @@ const routes = {
   oficios: "pages/oficios.html",
 
   historico: "pages/historico.html",
+
+  catalogos: "pages/catalogos.html",
 };
 
 // =====================================================
@@ -214,6 +218,14 @@ function initializePage(page) {
 
     case "historico":
       initHistorico();
+
+      break;
+
+    // =============================================
+    // CATALOGOS
+    // =============================================
+    case "catalogos":
+      renderCatalogos();
 
       break;
   }

@@ -41,58 +41,47 @@ export function initDemandaForm() {
 
 
 // ============================================================
-// CARGAR CATÁLOGOS
+// CARGAR CATÁLOGOS (Actualizado para leer localStorage)
 // ============================================================
 
 async function loadCatalogs() {
 
     try {
+        // 1. Cargar Entes de localStorage primero
+        let localEntes = getData("entes", null);
 
-        const entesURL =
-            new URL(
+        if (!localEntes) {
+            // Si no existen en localStorage, cargar fallback desde JSON
+            const entesURL = new URL(
                 "../../data/entes.json",
                 import.meta.url
             );
+            const entesResponse = await fetch(entesURL);
 
-        const accionesURL =
-            new URL(
-                "../../data/acciones-reclamadas.json",
-                import.meta.url
-            );
-
-
-        const [
-            entesResponse,
-            accionesResponse
-        ] = await Promise.all([
-            fetch(entesURL),
-            fetch(accionesURL)
-        ]);
-
-
-        if (entesResponse.ok) {
-
-            const data =
-                await entesResponse.json();
-
-            catalogoEntes =
-                Array.isArray(data)
+            if (entesResponse.ok) {
+                const data = await entesResponse.json();
+                catalogoEntes = Array.isArray(data)
                     ? data
                     : data.entes || [];
-
+                // Guardar en localStorage para futuras lecturas
+                saveData("entes", catalogoEntes);
+            }
+        } else {
+            catalogoEntes = localEntes;
         }
 
+        // 2. Cargar Acciones Reclamadas
+        const accionesURL = new URL(
+            "../../data/acciones-reclamadas.json",
+            import.meta.url
+        );
+        const accionesResponse = await fetch(accionesURL);
 
         if (accionesResponse.ok) {
-
-            const data =
-                await accionesResponse.json();
-
-            catalogoAcciones =
-                Array.isArray(data)
-                    ? data
-                    : data.acciones || [];
-
+            const data = await accionesResponse.json();
+            catalogoAcciones = Array.isArray(data)
+                ? data
+                : data.acciones || [];
         }
 
     }
