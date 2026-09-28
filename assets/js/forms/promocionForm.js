@@ -34,15 +34,9 @@ export function openPromocionForm() {
       formSection({
         number: 1,
         title: "Identificación",
-        description: "Número de promoción, expediente y fecha.",
-        columns: 3,
+        description: "Número de expediente y fecha.",
+        columns: 2,
         fields: [
-          inputField({
-            id: "numeroPromocion",
-            label: "Número de promoción",
-            required: true,
-          }),
-
           inputField({
             id: "expedientePromocion",
             label: "Número expediente",
@@ -103,25 +97,24 @@ export function openPromocionForm() {
 function savePromocion(event) {
   event.preventDefault();
 
+  const expedienteVal = document.getElementById("expedientePromocion")?.value.trim() || "";
+  const fechaVal = document.getElementById("fechaPromocion")?.value || "";
+  const oficioVal = document.getElementById("oficioPromocion")?.value || "";
+  const tipoVal = document.getElementById("tipoPromocion")?.value || "";
+  const descripcionVal = document.getElementById("descripcionPromocion")?.value || "";
+  const estadoVal = document.getElementById("estadoPromocion")?.value || "";
+
   const promociones = getData("promociones", []);
 
   const nuevaPromocion = {
     id: createId(),
-
-    numero: numeroPromocion.value,
-
-    expediente: expedientePromocion.value,
-
-    oficio: oficioPromocion.value,
-
-    fecha: fechaPromocion.value,
-
-    tipo: tipoPromocion.value,
-
-    descripcion: descripcionPromocion.value,
-
-    estado: estadoPromocion.value,
-
+    numero: expedienteVal, // O autogenerado si se requiere un folio interno
+    expediente: expedienteVal,
+    oficio: oficioVal,
+    fecha: fechaVal,
+    tipo: tipoVal,
+    descripcion: descripcionVal,
+    estado: estadoVal,
     creadoEn: new Date().toISOString(),
   };
 

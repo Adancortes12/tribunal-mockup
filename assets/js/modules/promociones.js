@@ -27,6 +27,9 @@ export function initPromociones() {
 // =====================================================
 
 export function renderPromociones() {
+  // 1. Recargar los datos actualizados desde localStorage
+  promociones = getData("promociones", []);
+
   const table = document.getElementById("promocionesTable");
 
   if (!table) {
@@ -35,107 +38,30 @@ export function renderPromociones() {
 
   if (promociones.length === 0) {
     table.innerHTML = `
-
-        <tr>
-
-        <td colspan="6">
-
-        No existen promociones registradas.
-
-        </td>
-
-        </tr>
-
-        `;
-
+      <tr>
+        <td colspan="5">No existen promociones registradas.</td>
+      </tr>
+    `;
     return;
   }
 
+  // 2. Renderizar filas (Como quitaste Número de Promoción, usamos item.expediente en la primera columna o ajustamos las columnas)
   table.innerHTML = promociones
     .map(
       (item) => `
-
-
-<tr>
-
-
-
-<td>
-
-${escapeHTML(item.numero)}
-
-</td>
-
-
-
-
-<td>
-
-${escapeHTML(item.expediente)}
-
-</td>
-
-
-
-
-<td>
-
-${formatDate(item.fecha)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(item.tipo)}
-
-</td>
-
-
-
-
-
-<td>
-
-${escapeHTML(item.descripcion)}
-
-</td>
-
-
-
-
-
-<td>
-
-
-<button
-
-class="table-action"
-
-onclick="
-viewPromocion('${escapeJS(item.id)}')
-"
-
->
-
-Ver
-
-</button>
-
-
-
-</td>
-
-
-
-</tr>
-
-
-
-`,
+      <tr>
+        <td>${escapeHTML(item.expediente)}</td>
+        <td>${escapeHTML(item.oficio || "-")}</td>
+        <td>${formatDate(item.fecha)}</td>
+        <td>${escapeHTML(item.tipo)}</td>
+        <td>${escapeHTML(item.descripcion)}</td>
+        <td>
+          <button class="table-action" onclick="viewPromocion('${escapeJS(item.id)}')">
+            Ver
+          </button>
+        </td>
+      </tr>
+    `
     )
     .join("");
 }
@@ -471,32 +397,31 @@ Guardar promoción
 function savePromocion(event) {
   event.preventDefault();
 
+  const expedienteVal = document.getElementById("expedientePromocion")?.value.trim() || "";
+
   const promocion = {
     id: createId(),
-
-    numero: document.getElementById("numeroPromocion").value,
-
-    expediente: document.getElementById("expedientePromocion").value,
-
-    oficio: document.getElementById("oficioPromocion").value,
-
-    fecha: document.getElementById("fechaPromocion").value,
-
-    tipo: document.getElementById("tipoPromocion").value,
-
-    descripcion: document.getElementById("descripcionPromocion").value,
-
-    estado: document.getElementById("estadoPromocion").value,
-
+    numero: expedienteVal, // Reemplazamos numeroPromocion por expedienteVal
+    expediente: expedienteVal,
+    oficio: document.getElementById("oficioPromocion")?.value || "",
+    fecha: document.getElementById("fechaPromocion")?.value || "",
+    tipo: document.getElementById("tipoPromocion")?.value || "",
+    descripcion: document.getElementById("descripcionPromocion")?.value || "",
+    estado: document.getElementById("estadoPromocion")?.value || "",
     creadoEn: new Date().toISOString(),
   };
 
-  promociones.unshift(promocion);
+  // 1. Obtener lista actual de localStorage
+  const promocionesActuales = getData("promociones", []);
+  
+  // 2. Agregar nuevo elemento al inicio
+  promocionesActuales.unshift(promocion);
 
-  saveData("promociones", promociones);
+  // 3. Guardar en localStorage
+  saveData("promociones", promocionesActuales);
 
+  // 4. Actualizar tabla y cerrar modal
   renderPromociones();
-
   closeModal();
 }
 
