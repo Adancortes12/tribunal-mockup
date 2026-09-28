@@ -1,4 +1,11 @@
-import { showModal, closeForm } from "./formHelper.js";
+import { closeForm } from "./formHelper.js";
+
+import {
+  openStandardForm,
+  inputField,
+  selectField,
+  formSection,
+} from "./formKit.js";
 
 import { createId } from "../utils.js";
 
@@ -9,236 +16,85 @@ export function initExpedienteForm() {
 }
 
 export function openNewExpediente() {
-  showModal(`
-
-
-<div class="form-header">
-
-
-<span>
-Expedientes
-</span>
-
-
-<h2>
-Nuevo expediente
-</h2>
-
-
-</div>
-
-
-
-
-<div class="form-body">
-
-
-<form id="newExpedienteForm">
-
-
-
-<div class="form-grid">
-
-
-
-<div class="field">
-
-<label>
-Número expediente
-</label>
-
-
-<input 
-id="numeroExp"
-required
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-<label>
-Fecha recepción
-</label>
-
-
-<input 
-type="date"
-id="fechaExp"
-required
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-<label>
-Actor
-</label>
-
-
-<input 
-id="actorExp"
-required
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-<label>
-Demandado
-</label>
-
-
-<input 
-id="demandadoExp"
-required
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-<label>
-Clasificación
-</label>
-
-
-<select id="clasificacionExp">
-
-<option>
-OCL - Educación
-</option>
-
-<option>
-OJC - Salud
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-<label>
-Estado
-</label>
-
-
-<select id="estadoExp">
-
-<option>
-Recibido
-</option>
-
-<option>
-En revisión
-</option>
-
-<option>
-Concluido
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-<div class="field full">
-
-
-<label>
-Ubicación
-</label>
-
-
-<input
-id="ubicacionExp"
->
-
-
-</div>
-
-
-
-
-</div>
-
-
-
-
-<div class="form-actions">
-
-
-<button
-type="button"
-class="secondary-btn"
-onclick="closeForm()"
->
-
-Cancelar
-
-</button>
-
-
-
-<button
-class="primary-btn"
->
-
-Guardar
-
-</button>
-
-
-</div>
-
-
-
-
-</form>
-
-
-</div>
-
-
-`);
-
-  document
-    .getElementById("newExpedienteForm")
-    .addEventListener("submit", saveExpediente);
+  openStandardForm({
+    eyebrow: "EXPEDIENTES",
+    title: "Registrar nuevo expediente",
+    description: "Captura la información necesaria para dar de alta el expediente.",
+    formId: "newExpedienteForm",
+    cancelId: "cancelExpedienteBtn",
+    submitLabel: "Registrar expediente",
+    onSubmit: saveExpediente,
+
+    sections: [
+      formSection({
+        number: 1,
+        title: "Identificación",
+        description: "Número y fecha de recepción.",
+        fields: [
+          inputField({
+            id: "numeroExp",
+            label: "Número expediente",
+            placeholder: "Ej. 124/2026",
+            required: true,
+          }),
+
+          inputField({
+            id: "fechaExp",
+            label: "Fecha recepción",
+            type: "date",
+            required: true,
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 2,
+        title: "Partes",
+        description: "Actor y demandado del expediente.",
+        fields: [
+          inputField({
+            id: "actorExp",
+            label: "Actor",
+            placeholder: "Nombre del actor",
+            required: true,
+          }),
+
+          inputField({
+            id: "demandadoExp",
+            label: "Demandado",
+            placeholder: "Nombre del demandado",
+            required: true,
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 3,
+        title: "Clasificación y ubicación",
+        description: "Clasificación, estado y dónde se encuentra.",
+        fields: [
+          selectField({
+            id: "clasificacionExp",
+            label: "Clasificación",
+            options: ["OCL - Educación", "OJC - Salud"],
+          }),
+
+          selectField({
+            id: "estadoExp",
+            label: "Estado",
+            options: ["Recibido", "En revisión", "Concluido"],
+          }),
+
+          inputField({
+            id: "ubicacionExp",
+            label: "Ubicación",
+            placeholder: "Ej. Secretaría de Acuerdos",
+            full: true,
+          }),
+        ],
+      }),
+    ],
+  });
 }
 
 function saveExpediente(event) {
@@ -248,21 +104,13 @@ function saveExpediente(event) {
 
   const nuevo = {
     id: createId(),
-
     numero: numeroExp.value,
-
     fecha: fechaExp.value,
-
     actor: actorExp.value,
-
     demandado: demandadoExp.value,
-
     clasificacion: clasificacionExp.value,
-
     estado: estadoExp.value,
-
     ubicacion: ubicacionExp.value,
-
     creadoEn: new Date().toISOString(),
   };
 

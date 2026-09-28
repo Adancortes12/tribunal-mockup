@@ -2,527 +2,136 @@
 // FORMULARIO PROMOCION
 // =====================================================
 
+import { closeForm } from "./formHelper.js";
 
 import {
-    showModal,
-    closeForm
-}
-from "./formHelper.js";
+  openStandardForm,
+  inputField,
+  selectField,
+  textareaField,
+  formSection,
+} from "./formKit.js";
 
+import { createId } from "../utils.js";
 
-import {
-    createId
-}
-from "../utils.js";
+import { getData, saveData } from "../storage.js";
 
-
-import {
-    getData,
-    saveData
-}
-from "../storage.js";
-
-
-
-
-
-export function initPromocionForm(){
-
-
-    window.openPromocionForm =
-        openPromocionForm;
-
-
+export function initPromocionForm() {
+  window.openPromocionForm = openPromocionForm;
 }
 
-
-
-
-
-
-
-
-
-export function openPromocionForm(){
-
-
-
-showModal(`
-
-
-<div class="form-header">
-
-
-<span>
-Promociones
-</span>
-
-
-<h2>
-Nueva promoción
-</h2>
-
-
-</div>
-
-
-
-
-
-<div class="form-body">
-
-
-<form id="newPromocionForm">
-
-
-
-
-
-<div class="form-grid">
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número de promoción
-</label>
-
-
-<input
-
-id="numeroPromocion"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número expediente
-</label>
-
-
-<input
-
-id="expedientePromocion"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número oficio relacionado
-</label>
-
-
-<input
-
-id="oficioPromocion"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Fecha
-</label>
-
-
-<input
-
-type="date"
-
-id="fechaPromocion"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Tipo de promoción
-</label>
-
-
-<select
-
-id="tipoPromocion"
-
->
-
-
-<option>
-Escrito
-</option>
-
-
-<option>
-Solicitud
-</option>
-
-
-<option>
-Notificación
-</option>
-
-
-<option>
-Otro
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Estado
-</label>
-
-
-<select
-
-id="estadoPromocion"
-
->
-
-
-<option>
-Recibida
-</option>
-
-
-<option>
-En revisión
-</option>
-
-
-<option>
-Atendida
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field full">
-
-
-<label>
-Descripción
-</label>
-
-
-<textarea
-
-id="descripcionPromocion"
-
-rows="4"
-
-></textarea>
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="form-actions">
-
-
-
-<button
-
-type="button"
-
-class="secondary-btn"
-
-onclick="closeForm()"
-
->
-
-Cancelar
-
-</button>
-
-
-
-
-
-<button
-
-class="primary-btn"
-
->
-
-Guardar promoción
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-</form>
-
-
-</div>
-
-
-`);
-
-
-
-
-
-
-
-
-document
-.getElementById(
-"newPromocionForm"
-)
-.addEventListener(
-
-"submit",
-
-savePromocion
-
-);
-
-
-
+export function openPromocionForm() {
+  openStandardForm({
+    eyebrow: "PROMOCIONES",
+    title: "Registrar nueva promoción",
+    description: "Captura la información de la promoción recibida.",
+    formId: "newPromocionForm",
+    cancelId: "cancelPromocionBtn",
+    submitLabel: "Registrar promoción",
+    onSubmit: savePromocion,
+
+    sections: [
+      formSection({
+        number: 1,
+        title: "Identificación",
+        description: "Número de promoción, expediente y fecha.",
+        columns: 3,
+        fields: [
+          inputField({
+            id: "numeroPromocion",
+            label: "Número de promoción",
+            required: true,
+          }),
+
+          inputField({
+            id: "expedientePromocion",
+            label: "Número expediente",
+            placeholder: "Ej. 124/2026",
+            required: true,
+          }),
+
+          inputField({
+            id: "fechaPromocion",
+            label: "Fecha",
+            type: "date",
+            required: true,
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 2,
+        title: "Clasificación",
+        description: "Oficio relacionado, tipo y estado.",
+        columns: 3,
+        fields: [
+          inputField({
+            id: "oficioPromocion",
+            label: "Número oficio relacionado",
+          }),
+
+          selectField({
+            id: "tipoPromocion",
+            label: "Tipo de promoción",
+            options: ["Escrito", "Solicitud", "Notificación", "Otro"],
+          }),
+
+          selectField({
+            id: "estadoPromocion",
+            label: "Estado",
+            options: ["Recibida", "En revisión", "Atendida"],
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 3,
+        title: "Descripción",
+        description: "Detalle de la promoción.",
+        fields: [
+          textareaField({
+            id: "descripcionPromocion",
+            label: "Descripción",
+            rows: 4,
+          }),
+        ],
+      }),
+    ],
+  });
 }
 
+function savePromocion(event) {
+  event.preventDefault();
 
+  const promociones = getData("promociones", []);
 
+  const nuevaPromocion = {
+    id: createId(),
 
+    numero: numeroPromocion.value,
 
+    expediente: expedientePromocion.value,
 
+    oficio: oficioPromocion.value,
 
+    fecha: fechaPromocion.value,
 
+    tipo: tipoPromocion.value,
 
-function savePromocion(
-event
-){
+    descripcion: descripcionPromocion.value,
 
+    estado: estadoPromocion.value,
 
-event.preventDefault();
+    creadoEn: new Date().toISOString(),
+  };
 
+  promociones.unshift(nuevaPromocion);
 
+  saveData("promociones", promociones);
 
+  closeForm();
 
-
-const promociones =
-getData(
-"promociones",
-[]
-);
-
-
-
-
-
-
-
-const nuevaPromocion = {
-
-
-
-
-id:
-
-createId(),
-
-
-
-
-
-numero:
-
-numeroPromocion.value,
-
-
-
-
-
-expediente:
-
-expedientePromocion.value,
-
-
-
-
-
-oficio:
-
-oficioPromocion.value,
-
-
-
-
-
-fecha:
-
-fechaPromocion.value,
-
-
-
-
-
-tipo:
-
-tipoPromocion.value,
-
-
-
-
-
-descripcion:
-
-descripcionPromocion.value,
-
-
-
-
-
-estado:
-
-estadoPromocion.value,
-
-
-
-
-
-creadoEn:
-
-new Date()
-.toISOString()
-
-
-
-};
-
-
-
-
-
-
-
-promociones.unshift(
-nuevaPromocion
-);
-
-
-
-
-
-
-saveData(
-"promociones",
-promociones
-);
-
-
-
-
-
-
-closeForm();
-
-
-
-
-
-
-if(
-window.renderPromociones
-){
-
-window.renderPromociones();
-
-}
-
-
-
+  if (window.renderPromociones) {
+    window.renderPromociones();
+  }
 }

@@ -2,178 +2,83 @@
 // FORM HELPER
 // ============================================================
 
-
 // ============================================================
 // MOSTRAR MODAL
 // ============================================================
 
-export function showModal(
-    content
-) {
+export function showModal(content) {
+  const modal = document.getElementById("modal");
 
-    const modal =
-        document.getElementById(
-            "modal"
-        );
+  const modalContent = document.getElementById("modalContent");
 
+  if (!modal || !modalContent) {
+    console.error("No se encontró el modal global.");
 
-    const modalContent =
-        document.getElementById(
-            "modalContent"
-        );
+    return;
+  }
 
+  modalContent.innerHTML = content;
 
-    if (
-        !modal ||
-        !modalContent
-    ) {
+  modal.classList.add("show");
 
-        console.error(
-            "No se encontró el modal global."
-        );
+  modal.setAttribute("aria-hidden", "false");
 
-        return;
+  document.body.classList.add("modal-open");
 
-    }
-
-
-    modalContent.innerHTML =
-        content;
-
-
-    modal.classList.add(
-        "show"
-    );
-
-
-    modal.setAttribute(
-        "aria-hidden",
-        "false"
-    );
-
-
-    document.body.classList.add(
-        "modal-open"
-    );
-
-
-    setupCloseButton();
-
+  setupCloseButton();
 }
-
 
 // ============================================================
 // CERRAR
 // ============================================================
 
 export function closeForm() {
+  const modal = document.getElementById("modal");
 
-    const modal =
-        document.getElementById(
-            "modal"
-        );
+  const modalContent = document.getElementById("modalContent");
 
+  if (!modal) {
+    return;
+  }
 
-    const modalContent =
-        document.getElementById(
-            "modalContent"
-        );
+  modal.classList.remove("show");
 
+  modal.setAttribute("aria-hidden", "true");
 
-    if (!modal) {
-        return;
-    }
+  document.body.classList.remove("modal-open");
 
-
-    modal.classList.remove(
-        "show"
-    );
-
-
-    modal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
-
-
-    document.body.classList.remove(
-        "modal-open"
-    );
-
-
-    if (modalContent) {
-
-        modalContent.innerHTML = "";
-
-    }
-
+  if (modalContent) {
+    modalContent.innerHTML = "";
+  }
 }
 
+// Los botones "Cancelar" usan onclick="closeForm()" en línea,
+// y eso requiere una función global.
+window.closeForm = closeForm;
 
 // ============================================================
 // BOTÓN CERRAR
 // ============================================================
 
 function setupCloseButton() {
+  const button = document.getElementById("modalCloseBtn");
 
-    const button =
-        document.getElementById(
-            "modalCloseBtn"
-        );
+  if (!button) {
+    return;
+  }
 
-
-    if (!button) {
-        return;
-    }
-
-
-    button.onclick =
-        closeForm;
-
+  button.onclick = closeForm;
 }
-
-
-// ============================================================
-// ESC
-// ============================================================
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key !== "Escape"
-        ) {
-            return;
-        }
-
-
-        const modal =
-            document.getElementById(
-                "modal"
-            );
-
-
-        if (
-            modal?.classList.contains(
-                "show"
-            )
-        ) {
-
-            closeForm();
-
-        }
-
-    }
-);
-
 
 // ============================================================
 // IMPORTANTE
 //
-// No existe listener para:
-// click sobre #modal => cerrar.
+// El modal solo se cierra con el botón de cerrar (X) o con el botón
+// "Cancelar" / "Aceptar" del propio formulario.
 //
-// Por lo tanto:
-// click fuera del formulario NO cierra el modal.
+// No existe listener para:
+//   - click sobre #modal (fuera de la tarjeta)
+//   - tecla ESC
+//
+// Por lo tanto, ninguno de los dos cierra el modal.
 // ============================================================

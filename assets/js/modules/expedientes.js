@@ -33,6 +33,7 @@ export function initExpedientes() {
 // =====================================================
 
 export function renderExpedientes() {
+  expedientes = getData("expedientes", []);
   const table = document.getElementById("expedientesTable");
 
   if (!table) {

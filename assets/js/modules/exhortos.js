@@ -27,6 +27,7 @@ export function initExhortos() {
 // =====================================================
 
 export function renderExhortos() {
+  exhortos = getData("exhortos", []);
   const table = document.getElementById("exhortosTable");
 
   if (!table) {

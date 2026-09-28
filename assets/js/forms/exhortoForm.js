@@ -2,7 +2,16 @@
 // FORMULARIO EXHORTO
 // =====================================================
 
-import { showModal, closeForm } from "./formHelper.js";
+import { closeForm } from "./formHelper.js";
+
+import {
+  openStandardForm,
+  inputField,
+  selectField,
+  textareaField,
+  checkField,
+  formSection,
+} from "./formKit.js";
 
 import { createId } from "../utils.js";
 
@@ -13,332 +22,101 @@ export function initExhortoForm() {
 }
 
 export function openExhortoForm() {
-  showModal(`
-
-
-<div class="form-header">
-
-
-<span>
-Exhortos
-</span>
-
-
-<h2>
-Nuevo exhorto
-</h2>
-
-
-</div>
-
-
-
-
-
-<div class="form-body">
-
-
-<form id="newExhortoForm">
-
-
-
-
-
-<div class="form-grid">
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número de exhorto
-</label>
-
-
-<input
-
-id="numeroExhorto"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Fecha de llegada
-</label>
-
-
-<input
-
-type="date"
-
-id="fechaExhorto"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Número exhorto de origen
-</label>
-
-
-<input
-
-id="origenExhorto"
-
->
-
-
-</div>
-
-<div class="field-check">
-
-<label>
-<input type="checkbox" id="exhortoInterno">
-Exhorto interno
-</label>
-
-</div>
-
-
-
-<div class="field">
-
-
-<label>
-Actor demandado
-</label>
-
-
-<input
-
-id="actorDemandado"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Autoridad exhortante
-</label>
-
-
-<input
-
-id="autoridadExhortante"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Estado
-</label>
-
-
-<select
-
-id="estadoExhorto"
-
->
-
-
-<option>
-Recibido
-</option>
-
-
-<option>
-En trámite
-</option>
-
-
-<option>
-Concluido
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Ubicación
-</label>
-
-
-<input
-
-id="ubicacionExhorto"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field full">
-
-
-<label>
-Promoción
-</label>
-
-
-<textarea
-
-id="promocionExhorto"
-
-rows="4"
-
-placeholder="
-Número de expediente y número de oficio
-"
-
-></textarea>
-
-
-</div>
-
-<div class="field full">
-
-<label>
-Requerimiento o solicitud
-</label>
-
-<textarea
-id="requerimientoExhorto"
-rows="4"
-></textarea>
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="form-actions">
-
-
-
-<button
-
-type="button"
-
-class="secondary-btn"
-
-onclick="closeForm()"
-
->
-
-Cancelar
-
-</button>
-
-
-
-
-
-<button
-
-class="primary-btn"
-
->
-
-Guardar exhorto
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-</form>
-
-
-</div>
-
-
-`);
-
-  document.getElementById("newExhortoForm").addEventListener(
-    "submit",
-
-    saveExhorto,
-  );
+  openStandardForm({
+    eyebrow: "EXHORTOS",
+    title: "Registrar nuevo exhorto",
+    description: "Captura la información del exhorto recibido.",
+    formId: "newExhortoForm",
+    cancelId: "cancelExhortoBtn",
+    submitLabel: "Registrar exhorto",
+    onSubmit: saveExhorto,
+
+    sections: [
+      formSection({
+        number: 1,
+        title: "Recepción",
+        description: "Número, fecha de llegada y origen.",
+        fields: [
+          inputField({
+            id: "numeroExhorto",
+            label: "Número de exhorto",
+            required: true,
+          }),
+
+          inputField({
+            id: "fechaExhorto",
+            label: "Fecha de llegada",
+            type: "date",
+            required: true,
+          }),
+
+          inputField({
+            id: "origenExhorto",
+            label: "Número exhorto de origen",
+            full: true,
+          }),
+
+          checkField({
+            id: "exhortoInterno",
+            label: "Exhorto interno",
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 2,
+        title: "Partes y autoridad",
+        description: "Actor demandado y autoridad exhortante.",
+        fields: [
+          inputField({
+            id: "actorDemandado",
+            label: "Actor demandado",
+          }),
+
+          inputField({
+            id: "autoridadExhortante",
+            label: "Autoridad exhortante",
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 3,
+        title: "Estado y ubicación",
+        description: "Situación actual del exhorto.",
+        fields: [
+          selectField({
+            id: "estadoExhorto",
+            label: "Estado",
+            options: ["Recibido", "En trámite", "Concluido"],
+          }),
+
+          inputField({
+            id: "ubicacionExhorto",
+            label: "Ubicación",
+          }),
+        ],
+      }),
+
+      formSection({
+        number: 4,
+        title: "Contenido",
+        description: "Promoción y requerimiento del exhorto.",
+        fields: [
+          textareaField({
+            id: "promocionExhorto",
+            label: "Promoción",
+            placeholder: "Número de expediente y número de oficio",
+          }),
+
+          textareaField({
+            id: "requerimientoExhorto",
+            label: "Requerimiento o solicitud",
+          }),
+        ],
+      }),
+    ],
+  });
 }
 
 function saveExhorto(event) {

@@ -97,7 +97,7 @@
 .demandas-new-button {
     min-width: 150px;
 
-    height: 42px !important;
+    min-height: 42px !important;
 
     flex-shrink: 0;
 }
@@ -1980,4 +1980,44 @@
 .demanda-btn-secondary,
 .demanda-btn-primary {
     font-size: 11px !important;
+}
+
+
+/* ============================================================
+   AJUSTE FINAL - TEXTO DENTRO DE LOS BOTONES
+   El alto fijo pasa a mínimo: si el texto no cabe, baja de línea
+   y el botón crece, en lugar de salirse.
+   ============================================================ */
+
+.demanda-btn-secondary,
+.demanda-btn-primary,
+.demanda-add-tercero {
+    height: auto !important;
+
+    line-height: 1.25 !important;
+
+    text-align: center !important;
+
+    white-space: normal !important;
+
+    overflow-wrap: anywhere !important;
+}
+
+.demanda-btn-secondary,
+.demanda-btn-primary {
+    min-height: 37px !important;
+
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+}
+
+.demanda-add-tercero {
+    min-height: 40px !important;
+
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+}
+
+.demanda-form-footer {
+    flex-wrap: wrap !important;
 }

@@ -2,21 +2,11 @@
 // RESUMEN HISTÓRICO
 // ============================================================
 
-import {
-    getData,
-    saveData
-} from "../storage.js";
+import { getData, saveData } from "../storage.js";
 
-import {
-    createId,
-    escapeHTML
-} from "../utils.js";
+import { createId, escapeHTML } from "../utils.js";
 
-import {
-    showModal,
-    closeForm
-} from "../forms/formHelper.js";
-
+import { showModal, closeForm } from "../forms/formHelper.js";
 
 // ============================================================
 // ESTADO
@@ -28,731 +18,396 @@ let movimientosEjemplo = [];
 
 let movimientosActuales = [];
 
-
 // ============================================================
 // INICIALIZAR
 // ============================================================
 
 export async function initHistorico() {
+  window.renderHistorico = renderHistorico;
 
-    window.renderHistorico =
-        renderHistorico;
+  // Dejamos también disponible la acción del botón.
+  window.openMesasConfirmation = openMesasConfirmation;
 
-    // Dejamos también disponible la acción del botón.
-    window.openMesasConfirmation =
-        openMesasConfirmation;
+  currentFilter = "";
 
+  setupHistoricoSearch();
 
-    setupHistoricoSearch();
+  setupMesasButton();
 
-    setupMesasButton();
+  await loadHistoricoEjemplo();
 
+  renderHistorico();
 
-    await loadHistoricoEjemplo();
-
-
-    renderHistorico();
-
-    renderUltimoEnvio();
-
+  renderUltimoEnvio();
 }
 
-
 // Compatibilidad por si app.js usa el nombre anterior.
-export const initResumenHistorico =
-    initHistorico;
-
+export const initResumenHistorico = initHistorico;
 
 // ============================================================
 // CARGAR JSON DE EJEMPLO
 // ============================================================
 
 async function loadHistoricoEjemplo() {
+  try {
+    const url = new URL("../../data/historico-ejemplo.json", import.meta.url);
 
-    try {
+    const response = await fetch(url);
 
-        const url =
-            new URL(
-                "../../data/historico-ejemplo.json",
-                import.meta.url
-            );
+    if (!response.ok) {
+      console.warn("No se pudo cargar historico-ejemplo.json");
 
+      movimientosEjemplo = [];
 
-        const response =
-            await fetch(url);
-
-
-        if (!response.ok) {
-
-            console.warn(
-                "No se pudo cargar historico-ejemplo.json"
-            );
-
-            movimientosEjemplo = [];
-
-            return;
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        movimientosEjemplo =
-            Array.isArray(data)
-                ? data
-                : data.movimientos || [];
-
-    }
-    catch (error) {
-
-        console.error(
-            "Error cargando historial de ejemplo:",
-            error
-        );
-
-
-        movimientosEjemplo = [];
-
+      return;
     }
 
+    const data = await response.json();
+
+    movimientosEjemplo = Array.isArray(data) ? data : data.movimientos || [];
+  } catch (error) {
+    console.error("Error cargando historial de ejemplo:", error);
+
+    movimientosEjemplo = [];
+  }
 }
-
 
 // ============================================================
 // MOVIMIENTOS REALES
 // ============================================================
 
 function getMovimientosLocales() {
+  const demandas = getData("demandas", []);
 
-    const demandas =
-        getData(
-            "demandas",
-            []
-        );
+  const amparos = getData("amparos", []);
 
+  const exhortos = getData("exhortos", []);
 
-    const amparos =
-        getData(
-            "amparos",
-            []
-        );
+  const promociones = getData("promociones", []);
 
+  const oficios = getData("oficios", []);
 
-    const exhortos =
-        getData(
-            "exhortos",
-            []
-        );
+  const movimientos = [];
 
+  // ========================================================
+  // DEMANDAS
+  // ========================================================
 
-    const promociones =
-        getData(
-            "promociones",
-            []
-        );
+  demandas.forEach((item) => {
+    movimientos.push({
+      id: item.id,
 
+      fecha: item.creadoEn || item.fecha,
 
-    const oficios =
-        getData(
-            "oficios",
-            []
-        );
+      tipo: "Demanda",
 
+      referencia: item.expediente || "Sin expediente",
 
-    const movimientos = [];
+      movimiento: "Registro de demanda",
+    });
+  });
 
+  // ========================================================
+  // AMPAROS
+  // ========================================================
 
-    // ========================================================
-    // DEMANDAS
-    // ========================================================
+  amparos.forEach((item) => {
+    movimientos.push({
+      id: item.id,
 
-    demandas.forEach(
-        item => {
+      fecha: item.creadoEn || buildDateTime(item.dia, item.hora),
 
-            movimientos.push({
+      tipo: "Amparo",
 
-                id:
-                    item.id,
+      referencia: item.expediente || "Sin expediente",
 
-                fecha:
-                    item.creadoEn ||
-                    item.fecha,
+      movimiento: "Registro de amparo",
+    });
+  });
 
-                tipo:
-                    "Demanda",
+  // ========================================================
+  // EXHORTOS
+  // ========================================================
 
-                referencia:
-                    item.expediente ||
-                    "Sin expediente",
+  exhortos.forEach((item) => {
+    movimientos.push({
+      id: item.id,
 
-                movimiento:
-                    "Registro de demanda"
+      fecha: item.creadoEn || item.fecha,
 
-            });
+      tipo: "Exhorto",
 
-        }
-    );
+      referencia: item.numero || item.expediente || "Sin referencia",
 
+      movimiento: "Registro de exhorto",
+    });
+  });
 
-    // ========================================================
-    // AMPAROS
-    // ========================================================
+  // ========================================================
+  // PROMOCIONES
+  // ========================================================
 
-    amparos.forEach(
-        item => {
+  promociones.forEach((item) => {
+    movimientos.push({
+      id: item.id,
 
-            movimientos.push({
+      fecha: item.creadoEn || item.fecha,
 
-                id:
-                    item.id,
+      tipo: "Promoción",
 
-                fecha:
-                    item.creadoEn ||
-                    buildDateTime(
-                        item.dia,
-                        item.hora
-                    ),
+      referencia: item.expediente || item.numero || "Sin referencia",
 
-                tipo:
-                    "Amparo",
+      movimiento: "Registro de promoción",
+    });
+  });
 
-                referencia:
-                    item.expediente ||
-                    "Sin expediente",
+  // ========================================================
+  // OFICIOS
+  // ========================================================
 
-                movimiento:
-                    "Registro de amparo"
+  oficios.forEach((item) => {
+    const tipo = item.tipo === "Promoción" ? "Promoción" : "Oficio";
 
-            });
+    movimientos.push({
+      id: item.id,
 
-        }
-    );
+      fecha: item.creadoEn || item.fecha,
 
+      tipo,
 
-    // ========================================================
-    // EXHORTOS
-    // ========================================================
+      referencia: item.expediente || item.numero || "Sin referencia",
 
-    exhortos.forEach(
-        item => {
-
-            movimientos.push({
-
-                id:
-                    item.id,
-
-                fecha:
-                    item.creadoEn ||
-                    item.fecha,
-
-                tipo:
-                    "Exhorto",
-
-                referencia:
-                    item.numero ||
-                    item.expediente ||
-                    "Sin referencia",
-
-                movimiento:
-                    "Registro de exhorto"
-
-            });
-
-        }
-    );
-
-
-    // ========================================================
-    // PROMOCIONES
-    // ========================================================
-
-    promociones.forEach(
-        item => {
-
-            movimientos.push({
-
-                id:
-                    item.id,
-
-                fecha:
-                    item.creadoEn ||
-                    item.fecha,
-
-                tipo:
-                    "Promoción",
-
-                referencia:
-                    item.expediente ||
-                    item.numero ||
-                    "Sin referencia",
-
-                movimiento:
-                    "Registro de promoción"
-
-            });
-
-        }
-    );
-
-
-    // ========================================================
-    // OFICIOS
-    // ========================================================
-
-    oficios.forEach(
-        item => {
-
-            const tipo =
-                item.tipo === "Promoción"
-                    ? "Promoción"
-                    : "Oficio";
-
-
-            movimientos.push({
-
-                id:
-                    item.id,
-
-                fecha:
-                    item.creadoEn ||
-                    item.fecha,
-
-                tipo,
-
-                referencia:
-                    item.expediente ||
-                    item.numero ||
-                    "Sin referencia",
-
-                movimiento:
-                    tipo === "Promoción"
-                        ? "Registro de promoción"
-                        : "Registro de oficio"
-
-            });
-
-        }
-    );
-
-
-    return movimientos;
-
+      movimiento:
+        tipo === "Promoción" ? "Registro de promoción" : "Registro de oficio",
+    });
+  });
+
+  return movimientos;
 }
-
 
 // ============================================================
 // OBTENER TODOS
 // ============================================================
 
 function getMovimientos() {
+  const reales = getMovimientosLocales();
 
-    const reales =
-        getMovimientosLocales();
+  /*
+   * Por ahora mezclamos datos reales + demo.
+   *
+   * Después cuando conectemos backend/base de datos
+   * podemos eliminar movimientosEjemplo.
+   */
 
+  const todos = [...reales, ...movimientosEjemplo];
 
-    /*
-     * Por ahora mezclamos datos reales + demo.
-     *
-     * Después cuando conectemos backend/base de datos
-     * podemos eliminar movimientosEjemplo.
-     */
+  const mapa = new Map();
 
-    const todos = [
-
-        ...reales,
-
-        ...movimientosEjemplo
-
-    ];
-
-
-    const mapa =
-        new Map();
-
-
-    todos.forEach(
-        movimiento => {
-
-            const key =
-                String(
-                    movimiento.id ||
-                    `${movimiento.tipo}-${movimiento.referencia}-${movimiento.fecha}`
-                );
-
-
-            if (!mapa.has(key)) {
-
-                mapa.set(
-                    key,
-                    movimiento
-                );
-
-            }
-
-        }
+  todos.forEach((movimiento) => {
+    const key = String(
+      movimiento.id ||
+        `${movimiento.tipo}-${movimiento.referencia}-${movimiento.fecha}`,
     );
 
+    if (!mapa.has(key)) {
+      mapa.set(key, movimiento);
+    }
+  });
 
-    return Array
-        .from(
-            mapa.values()
-        )
-        .sort(
-            (a, b) =>
-                getTime(b.fecha) -
-                getTime(a.fecha)
-        );
-
+  return Array.from(mapa.values()).sort(
+    (a, b) => getTime(b.fecha) - getTime(a.fecha),
+  );
 }
-
 
 // ============================================================
 // RENDER TABLA
 // ============================================================
 
 export function renderHistorico() {
+  const tbody = document.getElementById("historicoTable");
 
-    const tbody =
-        document.getElementById(
-            "historicoTable"
-        );
+  const empty = document.getElementById("historicoEmpty");
 
+  if (!tbody) {
+    return;
+  }
 
-    const empty =
-        document.getElementById(
-            "historicoEmpty"
-        );
+  const movimientos = getMovimientos();
 
-
-    if (!tbody) {
-
-        return;
-
+  movimientosActuales = movimientos.filter((item) => {
+    if (!currentFilter) {
+      return true;
     }
 
-
-    const movimientos =
-        getMovimientos();
-
-
-    movimientosActuales =
-        movimientos.filter(
-            item => {
-
-                if (!currentFilter) {
-
-                    return true;
-
-                }
-
-
-                const text = `
+    const text = `
 
                     ${item.tipo || ""}
                     ${item.referencia || ""}
                     ${item.movimiento || ""}
-                    ${formatDateTime(
-                        item.fecha
-                    )}
+                    ${formatDateTime(item.fecha)}
 
-                `
-                .toLowerCase();
+                `.toLowerCase();
 
+    return text.includes(currentFilter);
+  });
 
-                return text.includes(
-                    currentFilter
-                );
+  // ========================================================
+  // SIN RESULTADOS
+  // ========================================================
 
-            }
-        );
-
-
-    // ========================================================
-    // SIN RESULTADOS
-    // ========================================================
-
-    if (
-        movimientosActuales.length === 0
-    ) {
-
-        tbody.innerHTML = "";
-
-
-        if (empty) {
-
-            empty.hidden =
-                false;
-
-        }
-
-
-        updateResumen(
-            []
-        );
-
-
-        return;
-
-    }
-
+  if (movimientosActuales.length === 0) {
+    tbody.innerHTML = "";
 
     if (empty) {
-
-        empty.hidden =
-            true;
-
+      empty.hidden = false;
     }
 
+    updateResumen([]);
 
-    // ========================================================
-    // FILAS
-    // ========================================================
+    return;
+  }
 
-    tbody.innerHTML =
-        movimientosActuales
-            .map(
-                item => `
+  if (empty) {
+    empty.hidden = true;
+  }
+
+  // ========================================================
+  // FILAS
+  // ========================================================
+
+  tbody.innerHTML = movimientosActuales
+    .map(
+      (item) => `
 
                     <tr>
 
                         <td>
 
-                            ${escapeHTML(
-                                formatDateTime(
-                                    item.fecha
-                                )
-                            )}
+                            ${escapeHTML(formatDateTime(item.fecha))}
 
                         </td>
 
                         <td>
 
-                            ${escapeHTML(
-                                item.tipo ||
-                                "—"
-                            )}
+                            ${escapeHTML(item.tipo || "—")}
 
                         </td>
 
                         <td>
 
-                            ${escapeHTML(
-                                item.referencia ||
-                                "—"
-                            )}
+                            ${escapeHTML(item.referencia || "—")}
 
                         </td>
 
                         <td>
 
-                            ${escapeHTML(
-                                item.movimiento ||
-                                "—"
-                            )}
+                            ${escapeHTML(item.movimiento || "—")}
 
                         </td>
 
                     </tr>
 
-                `
-            )
-            .join("");
+                `,
+    )
+    .join("");
 
-
-    updateResumen(
-        movimientosActuales
-    );
-
+  updateResumen(movimientosActuales);
 }
-
 
 // ============================================================
 // BUSCADOR
 // ============================================================
 
 function setupHistoricoSearch() {
+  const input = document.getElementById("historicoSearch");
 
-    const input =
-        document.getElementById(
-            "historicoSearch"
-        );
+  if (!input) {
+    return;
+  }
 
+  input.oninput = (event) => {
+    currentFilter = event.target.value.trim().toLowerCase();
 
-    if (!input) {
-
-        return;
-
-    }
-
-
-    input.oninput =
-        event => {
-
-            currentFilter =
-                event.target.value
-                    .trim()
-                    .toLowerCase();
-
-
-            renderHistorico();
-
-        };
-
+    renderHistorico();
+  };
 }
-
 
 // ============================================================
 // RESUMEN
 // ============================================================
 
-function updateResumen(
-    movimientos
-) {
+function updateResumen(movimientos) {
+  const resumen = createResumen(movimientos);
 
-    const resumen =
-        createResumen(
-            movimientos
-        );
+  setText("historicoTotal", resumen.total);
 
+  setText("historicoDemandas", resumen.demandas);
 
-    setText(
-        "historicoTotal",
-        resumen.total
-    );
+  setText("historicoAmparos", resumen.amparos);
 
+  setText("historicoExhortos", resumen.exhortos);
 
-    setText(
-        "historicoDemandas",
-        resumen.demandas
-    );
+  setText("historicoPromociones", resumen.promociones);
 
-
-    setText(
-        "historicoAmparos",
-        resumen.amparos
-    );
-
-
-    setText(
-        "historicoExhortos",
-        resumen.exhortos
-    );
-
-
-    setText(
-        "historicoPromociones",
-        resumen.promociones
-    );
-
-
-    setText(
-        "historicoOficios",
-        resumen.oficios
-    );
-
+  setText("historicoOficios", resumen.oficios);
 }
-
 
 // ============================================================
 // BOTÓN MANDAR A MESAS
 // ============================================================
 
 function setupMesasButton() {
+  const button = document.getElementById("sendToMesasBtn");
 
-    const button =
-        document.getElementById(
-            "sendToMesasBtn"
-        );
+  if (!button) {
+    console.warn("No se encontró #sendToMesasBtn");
 
+    return;
+  }
 
-    if (!button) {
-
-        console.warn(
-            "No se encontró #sendToMesasBtn"
-        );
-
-        return;
-
-    }
-
-
-    // Evita problemas por listeners anteriores.
-    button.onclick =
-        openMesasConfirmation;
-
+  // Evita problemas por listeners anteriores.
+  button.onclick = openMesasConfirmation;
 }
-
 
 // ============================================================
 // ABRIR CONFIRMACIÓN
 // ============================================================
 
 function openMesasConfirmation() {
+  /*
+   * Volvemos a obtener los datos para asegurar
+   * que el resumen esté actualizado.
+   */
 
-    /*
-     * Volvemos a obtener los datos para asegurar
-     * que el resumen esté actualizado.
-     */
+  const movimientos = getMovimientos();
 
-    const movimientos =
-        getMovimientos();
+  const filtrados = movimientos.filter((item) => {
+    if (!currentFilter) {
+      return true;
+    }
 
-
-    const filtrados =
-        movimientos.filter(
-            item => {
-
-                if (!currentFilter) {
-
-                    return true;
-
-                }
-
-
-                const text = `
+    const text = `
 
                     ${item.tipo || ""}
                     ${item.referencia || ""}
                     ${item.movimiento || ""}
 
-                `
-                .toLowerCase();
+                `.toLowerCase();
 
+    return text.includes(currentFilter);
+  });
 
-                return text.includes(
-                    currentFilter
-                );
+  movimientosActuales = filtrados;
 
-            }
-        );
+  if (movimientosActuales.length === 0) {
+    alert("No hay movimientos para mandar a mesas.");
 
+    return;
+  }
 
-    movimientosActuales =
-        filtrados;
+  const resumen = createResumen(movimientosActuales);
 
-
-    if (
-        movimientosActuales.length === 0
-    ) {
-
-        alert(
-            "No hay movimientos para mandar a mesas."
-        );
-
-        return;
-
-    }
-
-
-    const resumen =
-        createResumen(
-            movimientosActuales
-        );
-
-
-    showModal(`
+  showModal(`
 
         <div class="mesas-confirm">
 
@@ -775,9 +430,7 @@ function openMesasConfirmation() {
             </p>
 
 
-            ${renderResumenModal(
-                resumen
-            )}
+            ${renderResumenModal(resumen)}
 
 
             <div class="mesas-confirm-actions">
@@ -814,137 +467,71 @@ function openMesasConfirmation() {
 
     `);
 
+  const cancelButton = document.getElementById("cancelMesasBtn");
 
-    const cancelButton =
-        document.getElementById(
-            "cancelMesasBtn"
-        );
+  const confirmButton = document.getElementById("confirmMesasBtn");
 
+  if (cancelButton) {
+    cancelButton.onclick = closeForm;
+  }
 
-    const confirmButton =
-        document.getElementById(
-            "confirmMesasBtn"
-        );
-
-
-    if (cancelButton) {
-
-        cancelButton.onclick =
-            closeForm;
-
-    }
-
-
-    if (confirmButton) {
-
-        confirmButton.onclick =
-            () => {
-
-                sendToMesas(
-                    resumen
-                );
-
-            };
-
-    }
-
+  if (confirmButton) {
+    confirmButton.onclick = () => {
+      sendToMesas(resumen);
+    };
+  }
 }
-
 
 // ============================================================
 // GUARDAR ENVÍO
 // ============================================================
 
-function sendToMesas(
-    resumen
-) {
+function sendToMesas(resumen) {
+  const envios = getData("enviosMesas", []);
 
-    const envios =
-        getData(
-            "enviosMesas",
-            []
-        );
+  const envio = {
+    id: createId(),
 
+    fecha: new Date().toISOString(),
 
-    const envio = {
+    total: resumen.total,
 
-        id:
-            createId(),
+    demandas: resumen.demandas,
 
-        fecha:
-            new Date()
-                .toISOString(),
+    amparos: resumen.amparos,
 
-        total:
-            resumen.total,
+    exhortos: resumen.exhortos,
 
-        demandas:
-            resumen.demandas,
+    promociones: resumen.promociones,
 
-        amparos:
-            resumen.amparos,
+    oficios: resumen.oficios,
 
-        exhortos:
-            resumen.exhortos,
+    registros: movimientosActuales.map((item) => ({
+      id: item.id,
 
-        promociones:
-            resumen.promociones,
+      tipo: item.tipo,
 
-        oficios:
-            resumen.oficios,
+      referencia: item.referencia,
 
-        registros:
-            movimientosActuales.map(
-                item => ({
+      movimiento: item.movimiento,
+    })),
+  };
 
-                    id:
-                        item.id,
+  envios.unshift(envio);
 
-                    tipo:
-                        item.tipo,
+  saveData("enviosMesas", envios);
 
-                    referencia:
-                        item.referencia,
+  renderUltimoEnvio();
 
-                    movimiento:
-                        item.movimiento
-
-                })
-            )
-
-    };
-
-
-    envios.unshift(
-        envio
-    );
-
-
-    saveData(
-        "enviosMesas",
-        envios
-    );
-
-
-    renderUltimoEnvio();
-
-
-    showSuccessModal(
-        envio
-    );
-
+  showSuccessModal(envio);
 }
-
 
 // ============================================================
 // MODAL ÉXITO
 // ============================================================
 
-function showSuccessModal(
-    envio
-) {
-
-    showModal(`
+function showSuccessModal(envio) {
+  showModal(`
 
         <div class="mesas-confirm success">
 
@@ -966,9 +553,7 @@ function showSuccessModal(
             </p>
 
 
-            ${renderResumenModal(
-                envio
-            )}
+            ${renderResumenModal(envio)}
 
 
             <div class="mesas-confirm-actions">
@@ -990,68 +575,37 @@ function showSuccessModal(
 
     `);
 
+  const button = document.getElementById("finishMesasBtn");
 
-    const button =
-        document.getElementById(
-            "finishMesasBtn"
-        );
-
-
-    if (button) {
-
-        button.onclick =
-            closeForm;
-
-    }
-
+  if (button) {
+    button.onclick = closeForm;
+  }
 }
-
 
 // ============================================================
 // ÚLTIMO ENVÍO
 // ============================================================
 
 function renderUltimoEnvio() {
+  const container = document.getElementById("ultimoEnvioMesas");
 
-    const container =
-        document.getElementById(
-            "ultimoEnvioMesas"
-        );
+  if (!container) {
+    return;
+  }
 
+  const envios = getData("enviosMesas", []);
 
-    if (!container) {
+  const last = envios[0];
 
-        return;
+  if (!last) {
+    container.hidden = true;
 
-    }
+    return;
+  }
 
+  container.hidden = false;
 
-    const envios =
-        getData(
-            "enviosMesas",
-            []
-        );
-
-
-    const last =
-        envios[0];
-
-
-    if (!last) {
-
-        container.hidden =
-            true;
-
-        return;
-
-    }
-
-
-    container.hidden =
-        false;
-
-
-    container.innerHTML = `
+  container.innerHTML = `
 
         <div class="last-send-header">
 
@@ -1066,11 +620,7 @@ function renderUltimoEnvio() {
 
             <span>
 
-                ${escapeHTML(
-                    formatDateTime(
-                        last.fecha
-                    )
-                )}
+                ${escapeHTML(formatDateTime(last.fecha))}
 
             </span>
 
@@ -1143,102 +693,65 @@ function renderUltimoEnvio() {
         </div>
 
     `;
-
 }
-
 
 // ============================================================
 // CREAR RESUMEN
 // ============================================================
 
-function createResumen(
-    movimientos
-) {
+function createResumen(movimientos) {
+  const resumen = {
+    total: movimientos.length,
 
-    const resumen = {
+    demandas: 0,
 
-        total:
-            movimientos.length,
+    amparos: 0,
 
-        demandas:
-            0,
+    exhortos: 0,
 
-        amparos:
-            0,
+    promociones: 0,
 
-        exhortos:
-            0,
+    oficios: 0,
+  };
 
-        promociones:
-            0,
+  movimientos.forEach((item) => {
+    switch (item.tipo) {
+      case "Demanda":
+        resumen.demandas++;
 
-        oficios:
-            0
+        break;
 
-    };
+      case "Amparo":
+        resumen.amparos++;
 
+        break;
 
-    movimientos.forEach(
-        item => {
+      case "Exhorto":
+        resumen.exhortos++;
 
-            switch (
-                item.tipo
-            ) {
+        break;
 
-                case "Demanda":
+      case "Promoción":
+        resumen.promociones++;
 
-                    resumen.demandas++;
+        break;
 
-                    break;
+      case "Oficio":
+        resumen.oficios++;
 
+        break;
+    }
+  });
 
-                case "Amparo":
-
-                    resumen.amparos++;
-
-                    break;
-
-
-                case "Exhorto":
-
-                    resumen.exhortos++;
-
-                    break;
-
-
-                case "Promoción":
-
-                    resumen.promociones++;
-
-                    break;
-
-
-                case "Oficio":
-
-                    resumen.oficios++;
-
-                    break;
-
-            }
-
-        }
-    );
-
-
-    return resumen;
-
+  return resumen;
 }
-
 
 // ============================================================
 // CONTENIDO MODAL RESUMEN
 // ============================================================
 
-function renderResumenModal(
-    resumen
-) {
-
-    return `
+function renderResumenModal(resumen) {
+  return `
 
         <div class="mesas-confirm-summary">
 
@@ -1329,138 +842,66 @@ function renderResumenModal(
         </div>
 
     `;
-
 }
-
 
 // ============================================================
 // HELPERS
 // ============================================================
 
-function setText(
-    id,
-    value
-) {
+function setText(id, value) {
+  const element = document.getElementById(id);
 
-    const element =
-        document.getElementById(
-            id
-        );
-
-
-    if (element) {
-
-        element.textContent =
-            value;
-
-    }
-
+  if (element) {
+    element.textContent = value;
+  }
 }
 
+function buildDateTime(date, time) {
+  if (!date) {
+    return "";
+  }
 
-function buildDateTime(
-    date,
-    time
-) {
+  if (!time) {
+    return date;
+  }
 
-    if (!date) {
-
-        return "";
-
-    }
-
-
-    if (!time) {
-
-        return date;
-
-    }
-
-
-    return `${date}T${time}:00`;
-
+  return `${date}T${time}:00`;
 }
 
+function getTime(value) {
+  if (!value) {
+    return 0;
+  }
 
-function getTime(
-    value
-) {
+  const date = new Date(value);
 
-    if (!value) {
+  if (Number.isNaN(date.getTime())) {
+    return 0;
+  }
 
-        return 0;
-
-    }
-
-
-    const date =
-        new Date(
-            value
-        );
-
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return 0;
-
-    }
-
-
-    return date.getTime();
-
+  return date.getTime();
 }
 
+function formatDateTime(value) {
+  if (!value) {
+    return "—";
+  }
 
-function formatDateTime(
-    value
-) {
+  const date = new Date(value);
 
-    if (!value) {
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
 
-        return "—";
+  return date.toLocaleString("es-MX", {
+    day: "2-digit",
 
-    }
+    month: "2-digit",
 
+    year: "numeric",
 
-    const date =
-        new Date(
-            value
-        );
+    hour: "2-digit",
 
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return value;
-
-    }
-
-
-    return date.toLocaleString(
-        "es-MX",
-        {
-            day:
-                "2-digit",
-
-            month:
-                "2-digit",
-
-            year:
-                "numeric",
-
-            hour:
-                "2-digit",
-
-            minute:
-                "2-digit"
-        }
-    );
-
+    minute: "2-digit",
+  });
 }

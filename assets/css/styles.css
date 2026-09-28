@@ -559,7 +559,7 @@ button {
   gap: 7px !important;
 
   min-height: 40px;
-  padding: 0 18px !important;
+  padding: 8px 18px !important;
 
   border: 1px solid var(--blue) !important;
   border-radius: 6px !important;
@@ -568,8 +568,12 @@ button {
   color: #fff !important;
 
   font-size: 10px !important;
-  line-height: 1 !important;
+  line-height: 1.25 !important;
   font-weight: 700 !important;
+  text-align: center !important;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
 }
 
 .main-search .primary-btn {
@@ -592,8 +596,8 @@ button {
   justify-content: center !important;
   gap: 7px !important;
 
-  height: 43px !important;
-  padding: 0 18px !important;
+  min-height: 43px !important;
+  padding: 8px 18px !important;
 
   border: 1px solid #aec7e8 !important;
   border-radius: 7px !important;
@@ -602,7 +606,12 @@ button {
   color: #1764c9 !important;
 
   font-size: 10px !important;
+  line-height: 1.25 !important;
   font-weight: 600 !important;
+  text-align: center !important;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
 }
 
 .secondary-btn:hover {
@@ -689,11 +698,14 @@ button {
 
 .quick-card {
   display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
 
   width: 100% !important;
-  height: 88px !important;
+  height: auto !important;
+  min-height: 88px !important;
   min-width: 0 !important;
 
   margin: 0 !important;
@@ -737,6 +749,7 @@ button {
   display: flex !important;
   flex-direction: column !important;
   min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 .quick-content strong {
@@ -747,6 +760,7 @@ button {
   font-size: 11px !important;
   line-height: 13px !important;
   font-weight: 700 !important;
+  overflow-wrap: anywhere !important;
 }
 
 .quick-content span {
@@ -756,7 +770,8 @@ button {
   color: #70859a !important;
   font-size: 8px !important;
   line-height: 11px !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
 }
 
 /* Tabla recientes */
@@ -1382,6 +1397,13 @@ button {
 
   .quick-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .quick-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
   }
 
   .new-record {

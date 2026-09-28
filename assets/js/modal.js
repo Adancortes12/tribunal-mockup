@@ -23,14 +23,20 @@ export function openModal(content) {
 
 export function closeModal() {
   const modal = document.getElementById("modal");
+  const modalContent = document.getElementById("modalContent");
 
   if (!modal) {
     return;
   }
 
   modal.classList.remove("show");
-
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
   document.body.style.overflow = "";
+
+  if (modalContent) {
+    modalContent.innerHTML = "";
+  }
 }
 
 export function setupModal() {
@@ -40,19 +46,17 @@ export function setupModal() {
     return;
   }
 
-  // cerrar haciendo click fuera
+  // Algunos modales usan onclick="closeModal()" en línea.
+  window.closeModal = closeModal;
 
+  // El modal NO se cierra al hacer clic fuera (README §10).
+  // Solo se cierra con el botón X, delegado para que funcione
+  // también en los modales "Ver" que no pasan por showModal().
   modal.addEventListener("click", (event) => {
-    if (event.target === modal) {
+    if (event.target.closest("#modalCloseBtn")) {
       closeModal();
     }
   });
 
-  // cerrar con ESC
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      closeModal();
-    }
-  });
+  // La tecla ESC ya la maneja formHelper.js.
 }

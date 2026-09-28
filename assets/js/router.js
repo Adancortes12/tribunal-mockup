@@ -3,213 +3,114 @@
 // Sistema Tribunal
 // =====================================================
 
+import { renderExpedientes } from "./modules/expedientes.js";
 
-import {
-    renderExpedientes
-} from "./modules/expedientes.js";
+import { renderDemandas } from "./modules/demandas.js";
 
+// import {
+//     renderAmparos
+// } from "./modules/amparos.js";
 
-import {
-    renderDemandas
-} from "./modules/demandas.js";
+import { initAmparosPage } from "./modules/amparos.js";
 
+import { renderExhortos } from "./modules/exhortos.js";
 
-import {
-    renderAmparos
-} from "./modules/amparos.js";
+import { renderPromociones } from "./modules/promociones.js";
 
+import { renderOficios } from "./modules/oficios.js";
 
-import {
-    renderExhortos
-} from "./modules/exhortos.js";
-
-
-import {
-    renderPromociones
-} from "./modules/promociones.js";
-
-
-import {
-    renderOficios
-} from "./modules/oficios.js";
-
-
-import {
-    renderHistorico
-} from "./dashboard/historico.js";
-
-
-
+// import { renderHistorico } from "./dashboard/historico.js";
+import { initHistorico } from "./modules/historico.js";
 
 // =====================================================
 // RUTAS
 // =====================================================
 
 const routes = {
+  dashboard: "components/dashboard.html",
 
-    dashboard:
-        "components/dashboard.html",
+  expedientes: "pages/expedientes.html",
 
-    expedientes:
-        "pages/expedientes.html",
+  demandas: "pages/demandas.html",
 
-    demandas:
-        "pages/demandas.html",
+  amparos: "pages/amparos.html",
 
-    amparos:
-        "pages/amparos.html",
+  exhortos: "pages/exhortos.html",
 
-    exhortos:
-        "pages/exhortos.html",
+  promociones: "pages/promociones.html",
 
-    promociones:
-        "pages/promociones.html",
+  oficios: "pages/oficios.html",
 
-    oficios:
-        "pages/oficios.html",
-
-    historico:
-        "pages/historico.html"
-
+  historico: "pages/historico.html",
 };
-
-
-
 
 // =====================================================
 // NAVEGAR
 // =====================================================
 
 export async function navigate(page) {
+  const container = document.getElementById("content-container");
 
+  if (!container) {
+    console.error("No existe el elemento #content-container");
 
-    const container =
-        document.getElementById(
-            "content-container"
-        );
+    return;
+  }
 
+  const file = routes[page];
 
-    if (!container) {
+  if (!file) {
+    console.error("Ruta no encontrada:", page);
 
-        console.error(
-            "No existe el elemento #content-container"
-        );
+    return;
+  }
 
-        return;
+  try {
+    // =============================================
+    // CARGAR HTML
+    // =============================================
 
+    const response = await fetch(file);
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status} al cargar ${file}`);
     }
 
+    const html = await response.text();
 
+    container.innerHTML = html;
 
-    const file =
-        routes[page];
+    // =============================================
+    // ACTIVAR LA PAGINA
+    // =============================================
 
+    const pageElement = container.querySelector(".page");
 
-    if (!file) {
-
-        console.error(
-            "Ruta no encontrada:",
-            page
-        );
-
-        return;
-
+    if (pageElement) {
+      pageElement.classList.add("active");
     }
 
+    // =============================================
+    // MENU ACTIVO
+    // =============================================
 
+    setActiveMenu(page);
 
-    try {
+    // =============================================
+    // INICIALIZAR PAGINA
+    // =============================================
 
+    initializePage(page);
 
-        // =============================================
-        // CARGAR HTML
-        // =============================================
+    // =============================================
+    // SCROLL ARRIBA
+    // =============================================
 
-        const response =
-            await fetch(file);
+    window.scrollTo(0, 0);
+  } catch (error) {
+    console.error("Error al cargar la página:", error);
 
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Error HTTP ${response.status} al cargar ${file}`
-            );
-
-        }
-
-
-
-        const html =
-            await response.text();
-
-
-
-        container.innerHTML =
-            html;
-
-
-
-        // =============================================
-        // ACTIVAR LA PAGINA
-        // =============================================
-
-        const pageElement =
-            container.querySelector(
-                ".page"
-            );
-
-
-        if (pageElement) {
-
-            pageElement.classList.add(
-                "active"
-            );
-
-        }
-
-
-
-        // =============================================
-        // MENU ACTIVO
-        // =============================================
-
-        setActiveMenu(
-            page
-        );
-
-
-
-        // =============================================
-        // INICIALIZAR PAGINA
-        // =============================================
-
-        initializePage(
-            page
-        );
-
-
-
-        // =============================================
-        // SCROLL ARRIBA
-        // =============================================
-
-        window.scrollTo(
-            0,
-            0
-        );
-
-
-    }
-    catch (error) {
-
-
-        console.error(
-            "Error al cargar la página:",
-            error
-        );
-
-
-        container.innerHTML = `
+    container.innerHTML = `
 
             <div class="page active">
 
@@ -233,211 +134,125 @@ export async function navigate(page) {
             </div>
 
         `;
-
-    }
-
+  }
 }
-
-
-
 
 // =====================================================
 // INICIALIZAR PAGINA
 // =====================================================
 
-function initializePage(
-    page
-) {
+function initializePage(page) {
+  switch (page) {
+    // =============================================
+    // DASHBOARD
+    // =============================================
 
+    case "dashboard":
+      if (window.initDashboardPage) {
+        window.initDashboardPage();
+      }
 
-    switch (page) {
+      break;
 
+    // =============================================
+    // EXPEDIENTES
+    // =============================================
 
-        // =============================================
-        // DASHBOARD
-        // =============================================
+    case "expedientes":
+      renderExpedientes();
 
-        case "dashboard":
+      break;
 
-            if (
-                window.initDashboardPage
-            ) {
+    // =============================================
+    // DEMANDAS
+    // =============================================
 
-                window.initDashboardPage();
+    case "demandas":
+      renderDemandas();
 
-            }
+      break;
 
-        break;
+    // =============================================
+    // AMPAROS
+    // =============================================
 
+    case "amparos":
+      initAmparosPage();
 
+      break;
 
-        // =============================================
-        // EXPEDIENTES
-        // =============================================
+    // =============================================
+    // EXHORTOS
+    // =============================================
 
-        case "expedientes":
+    case "exhortos":
+      renderExhortos();
 
-            renderExpedientes();
+      break;
 
-        break;
+    // =============================================
+    // PROMOCIONES
+    // =============================================
 
+    case "promociones":
+      renderPromociones();
 
+      break;
 
-        // =============================================
-        // DEMANDAS
-        // =============================================
+    // =============================================
+    // OFICIOS
+    // =============================================
 
-        case "demandas":
+    case "oficios":
+      renderOficios();
 
-            renderDemandas();
+      break;
 
-        break;
+    // =============================================
+    // HISTORICO
+    // =============================================
 
+    case "historico":
+      initHistorico();
 
-
-        // =============================================
-        // AMPAROS
-        // =============================================
-
-        case "amparos":
-
-            renderAmparos();
-
-        break;
-
-
-
-        // =============================================
-        // EXHORTOS
-        // =============================================
-
-        case "exhortos":
-
-            renderExhortos();
-
-        break;
-
-
-
-        // =============================================
-        // PROMOCIONES
-        // =============================================
-
-        case "promociones":
-
-            renderPromociones();
-
-        break;
-
-
-
-        // =============================================
-        // OFICIOS
-        // =============================================
-
-        case "oficios":
-
-            renderOficios();
-
-        break;
-
-
-
-        // =============================================
-        // HISTORICO
-        // =============================================
-
-        case "historico":
-
-            renderHistorico();
-
-        break;
-
-
-    }
-
+      break;
+  }
 }
-
-
-
 
 // =====================================================
 // MENU ACTIVO
 // =====================================================
 
-function setActiveMenu(
-    page
-) {
+function setActiveMenu(page) {
+  document.querySelectorAll(".nav-item[data-page]").forEach((item) => {
+    item.classList.toggle(
+      "active",
 
-
-    document
-        .querySelectorAll(
-            ".nav-item[data-page]"
-        )
-        .forEach(
-            item => {
-
-
-                item.classList.toggle(
-
-                    "active",
-
-                    item.dataset.page === page
-
-                );
-
-
-            }
-        );
-
-
+      item.dataset.page === page,
+    );
+  });
 }
-
-
-
 
 // =====================================================
 // INICIALIZAR ROUTER
 // =====================================================
 
 export function initRouter() {
+  document.addEventListener(
+    "click",
 
+    (event) => {
+      const link = event.target.closest(".nav-item[data-page]");
 
-    document.addEventListener(
+      if (!link) {
+        return;
+      }
 
-        "click",
+      event.preventDefault();
 
-        event => {
+      const page = link.dataset.page;
 
-
-            const link =
-                event.target.closest(
-                    ".nav-item[data-page]"
-                );
-
-
-            if (!link) {
-
-                return;
-
-            }
-
-
-            event.preventDefault();
-
-
-            const page =
-                link.dataset.page;
-
-
-            navigate(
-                page
-            );
-
-
-        }
-
-    );
-
-
+      navigate(page);
+    },
+  );
 }

@@ -21,6 +21,8 @@ export async function initAmparos() {
   // inmediatamente después de guardar.
   window.renderAmparos = renderAmparos;
 
+  currentFilter = "";
+
   await seedAmparosEjemplo();
 
   bindAmparosEvents();
@@ -325,7 +327,7 @@ function anexarOficio(amparoId) {
     actoReclamado: amparo.actoReclamado,
   };
 
-  sessionStorage.setItem("oficioAmparoContext", JSON.stringify(context));
+  // sessionStorage.setItem("oficioAmparoContext", JSON.stringify(context));
 
   if (typeof window.openOficioForm === "function") {
     window.openOficioForm(context);

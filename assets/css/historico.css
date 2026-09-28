@@ -437,9 +437,9 @@
     gap: 7px;
 
     min-width: 135px;
-    height: 39px;
+    min-height: 39px;
 
-    padding: 0 15px;
+    padding: 8px 15px;
 
     border: 1px solid #2b72d6;
     border-radius: 7px;
@@ -453,7 +453,9 @@
     font-size: 10px;
     font-weight: 600;
 
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
 
     cursor: pointer;
 }
@@ -627,6 +629,8 @@
 .mesas-confirm-actions {
     display: flex;
 
+    flex-wrap: wrap;
+
     justify-content: flex-end;
 
     gap: 9px;
@@ -639,9 +643,9 @@
     justify-content: center;
 
     min-width: 100px;
-    height: 38px;
+    min-height: 38px;
 
-    padding: 0 14px;
+    padding: 8px 14px;
 
     border-radius: 7px;
 
@@ -650,7 +654,9 @@
     font-size: 10px;
     font-weight: 600;
 
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
 
     cursor: pointer;
 }
