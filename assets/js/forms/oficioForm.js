@@ -24,6 +24,28 @@ export function initOficioForm() {
   window.openOficioForm = openOficioForm;
 }
 
+// Muestra el input manual solo cuando la procedencia es "Otro"
+function setupProcedenciaListener() {
+  const select = document.getElementById("procedenciaOficio");
+  const wrapper = document.getElementById("procedenciaOtroWrapper");
+  const otroInput = document.getElementById("procedenciaOtroOficio");
+
+  if (!select || !wrapper || !otroInput) return;
+
+  select.addEventListener("change", () => {
+    const esOtro = select.value === "Otro";
+
+    wrapper.hidden = !esOtro;
+    otroInput.required = esOtro;
+
+    if (esOtro) {
+      otroInput.focus();
+    } else {
+      otroInput.value = "";
+    }
+  });
+}
+
 export function openOficioForm(context = null) {
   oficioContext = context && context.amparoId ? context : null;
 
@@ -69,10 +91,25 @@ export function openOficioForm(context = null) {
         title: "Procedencia y estado",
         description: "De dónde proviene y su situación actual.",
         fields: [
-          inputField({
+          selectField({
             id: "procedenciaOficio",
             label: "Procedencia",
+            options: [
+              "Tribunal Colegiado de Distrito",
+              "Juzgado Primero de Distrito",
+              "Juzgado Segundo de Distrito",
+              "Juzgado Tercero de Distrito",
+              "Otro",
+            ],
           }),
+
+          `<div id="procedenciaOtroWrapper" class="tf-full" hidden>
+            ${inputField({
+              id: "procedenciaOtroOficio",
+              label: "Especifica la procedencia",
+              placeholder: "Escribe la procedencia",
+            })}
+          </div>`,
 
           selectField({
             id: "estadoOficio",
@@ -100,6 +137,7 @@ export function openOficioForm(context = null) {
   // Se ejecuta DESPUÉS de que el formulario ya existe en el DOM.
   applyOficioContext();
   setupEstadoListener();
+  setupProcedenciaListener();
 }
 
 // Escucha el cambio de selección del estado e inyecta la leyenda tenue
@@ -110,7 +148,8 @@ function setupEstadoListener() {
   // Insertar contenedor dinámico debajo del select si no existe
   let infoContainer = document.getElementById("recibidoInfoContainer");
   if (!infoContainer) {
-    const parentField = selectEstado.closest(".field") || selectEstado.parentElement;
+    const parentField =
+      selectEstado.closest(".field") || selectEstado.parentElement;
     infoContainer = document.createElement("div");
     infoContainer.id = "recibidoInfoContainer";
     infoContainer.style.marginTop = "6px";
@@ -118,7 +157,8 @@ function setupEstadoListener() {
   }
 
   const renderInfo = () => {
-    const valorActual = document.getElementById("recibidoPorOficio")?.value || "";
+    const valorActual =
+      document.getElementById("recibidoPorOficio")?.value || "";
 
     if (selectEstado.value === "Recibido") {
       infoContainer.innerHTML = `
@@ -191,10 +231,18 @@ function applyOficioContext() {
 function saveOficio(event) {
   event.preventDefault();
 
+  const procedenciaSel =
+    document.getElementById("procedenciaOficio")?.value || "";
+  const procedencia =
+    procedenciaSel === "Otro"
+      ? document.getElementById("procedenciaOtroOficio")?.value.trim() || "Otro"
+      : procedenciaSel;
   const oficios = getData("oficios", []);
-  const estadoVal = document.getElementById("estadoOficio")?.value || "Pendiente";
+  const estadoVal =
+    document.getElementById("estadoOficio")?.value || "Pendiente";
   const esRecibido = estadoVal === "Recibido";
-  const recibidoPor = document.getElementById("recibidoPorOficio")?.value.trim() || "";
+  const recibidoPor =
+    document.getElementById("recibidoPorOficio")?.value.trim() || "";
 
   if (esRecibido && !recibidoPor) {
     document.getElementById("recibidoPorOficio")?.focus();
@@ -210,7 +258,7 @@ function saveOficio(event) {
 
     fecha: document.getElementById("fechaOficio")?.value || "",
 
-    procedencia: document.getElementById("procedenciaOficio")?.value || "",
+    procedencia: procedencia,
 
     asunto: document.getElementById("asuntoOficio")?.value || "",
 

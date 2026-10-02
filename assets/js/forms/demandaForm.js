@@ -2,21 +2,11 @@
 // FORMULARIO DE DEMANDA
 // ============================================================
 
-import {
-    showModal,
-    closeForm
-} from "./formHelper.js";
+import { showModal, closeForm } from "./formHelper.js";
 
-import {
-    createId,
-    escapeHTML
-} from "../utils.js";
+import { createId, escapeHTML } from "../utils.js";
 
-import {
-    getData,
-    saveData
-} from "../storage.js";
-
+import { getData, saveData } from "../storage.js";
 
 // ============================================================
 // CATÁLOGOS
@@ -27,88 +17,98 @@ let catalogoAcciones = [];
 
 let tercerosTemporales = [];
 
-
 // ============================================================
 // INICIALIZACIÓN
 // ============================================================
 
 export function initDemandaForm() {
-
-    window.openDemandaForm =
-        openDemandaForm;
-
+  window.openDemandaForm = openDemandaForm;
 }
 
+// Al marcar "Otros" aparece el input de captura manual
+function setupAccionOtro() {
+  const lista = document.getElementById("accionesReclamadasList");
+  const wrapper = document.getElementById("accionOtroWrapper");
+  const input = document.getElementById("demAccionOtro");
+
+  if (!lista || !wrapper || !input) {
+    return;
+  }
+
+  lista.addEventListener("change", (event) => {
+    const target = event.target;
+
+    if (target.name !== "accionesReclamadas" || target.value !== "otros") {
+      return;
+    }
+
+    wrapper.style.display = target.checked ? "block" : "none";
+    input.required = target.checked;
+
+    if (target.checked) {
+      input.focus({ preventScroll: true });
+      wrapper.scrollIntoView({ block: "nearest" });
+    } else {
+      input.value = "";
+    }
+  });
+}
 
 // ============================================================
 // CARGAR CATÁLOGOS (Actualizado para leer localStorage)
 // ============================================================
 
 async function loadCatalogs() {
+  try {
+    // 1. Cargar Entes de localStorage primero
+    let localEntes = getData("entes", null);
 
-    try {
-        // 1. Cargar Entes de localStorage primero
-        let localEntes = getData("entes", null);
+    if (!localEntes) {
+      // Si no existen en localStorage, cargar fallback desde JSON
+      const entesURL = new URL("../../data/entes.json", import.meta.url);
+      const entesResponse = await fetch(entesURL);
 
-        if (!localEntes) {
-            // Si no existen en localStorage, cargar fallback desde JSON
-            const entesURL = new URL(
-                "../../data/entes.json",
-                import.meta.url
-            );
-            const entesResponse = await fetch(entesURL);
-
-            if (entesResponse.ok) {
-                const data = await entesResponse.json();
-                catalogoEntes = Array.isArray(data)
-                    ? data
-                    : data.entes || [];
-                // Guardar en localStorage para futuras lecturas
-                saveData("entes", catalogoEntes);
-            }
-        } else {
-            catalogoEntes = localEntes;
-        }
-
-        // 2. Cargar Actos Demandados: primero catálogo administrable en localStorage.
-        const actosLocales = getData("actosDemandados", null);
-        if (actosLocales !== null) {
-            catalogoAcciones = actosLocales;
-        } else {
-            const accionesURL = new URL("../../data/acciones-reclamadas.json", import.meta.url);
-            const accionesResponse = await fetch(accionesURL);
-            if (accionesResponse.ok) {
-                const data = await accionesResponse.json();
-                catalogoAcciones = Array.isArray(data) ? data : data.acciones || [];
-                saveData("actosDemandados", catalogoAcciones);
-            }
-        }
-
-    }
-    catch (error) {
-
-        console.warn(
-            "No fue posible cargar los catálogos:",
-            error
-        );
-
+      if (entesResponse.ok) {
+        const data = await entesResponse.json();
+        catalogoEntes = Array.isArray(data) ? data : data.entes || [];
+        // Guardar en localStorage para futuras lecturas
+        saveData("entes", catalogoEntes);
+      }
+    } else {
+      catalogoEntes = localEntes;
     }
 
+    // 2. Cargar Actos Demandados: primero catálogo administrable en localStorage.
+    const actosLocales = getData("actosDemandados", null);
+    if (Array.isArray(actosLocales) && actosLocales.length) {
+      catalogoAcciones = actosLocales;
+    } else {
+      const accionesURL = new URL(
+        "../../data/acciones-reclamadas.json",
+        import.meta.url,
+      );
+      const accionesResponse = await fetch(accionesURL);
+      if (accionesResponse.ok) {
+        const data = await accionesResponse.json();
+        catalogoAcciones = Array.isArray(data) ? data : data.acciones || [];
+        saveData("actosDemandados", catalogoAcciones);
+      }
+    }
+  } catch (error) {
+    console.warn("No fue posible cargar los catálogos:", error);
+  }
 }
-
 
 // ============================================================
 // ABRIR FORMULARIO
 // ============================================================
 
 export async function openDemandaForm() {
+  await loadCatalogs();
 
-    await loadCatalogs();
+  tercerosTemporales = [];
 
-    tercerosTemporales = [];
-
-
-    showModal(`
+  showModal(`
 
         <div class="demanda-form-shell">
 
@@ -335,27 +335,7 @@ export async function openDemandaForm() {
                                 </div>
 
 
-                                <div
-                                    id="actorMoralContainer"
-                                    class="demanda-field demanda-dynamic-field"
-                                    hidden
-                                >
-
-                                    <label for="demActorEnte">
-
-                                        Ente
-
-                                        <span>*</span>
-
-                                    </label>
-
-                                    <select id="demActorEnte">
-
-                                        ${renderEntesOptions()}
-
-                                    </select>
-
-                                </div>
+                               ${renderMoralFields("actorMoralContainer", "demActor")}
 
                             </article>
 
@@ -443,27 +423,7 @@ export async function openDemandaForm() {
                                 </div>
 
 
-                                <div
-                                    id="demandadoMoralContainer"
-                                    class="demanda-field demanda-dynamic-field"
-                                    hidden
-                                >
-
-                                    <label for="demDemandadoEnte">
-
-                                        Ente
-
-                                        <span>*</span>
-
-                                    </label>
-
-                                    <select id="demDemandadoEnte">
-
-                                        ${renderEntesOptions()}
-
-                                    </select>
-
-                                </div>
+                                ${renderMoralFields("demandadoMoralContainer", "demDemandado")}
 
                             </article>
 
@@ -513,9 +473,7 @@ export async function openDemandaForm() {
 
                                 <select id="demTerceroCatalogo">
 
-                                    ${renderEntesOptions(
-                                        "Seleccionar ente"
-                                    )}
+                                    ${renderEntesOptions("Seleccionar ente")}
 
                                 </select>
 
@@ -608,6 +566,24 @@ export async function openDemandaForm() {
 
                             ${renderAccionesCheckboxes()}
 
+                        </div>
+
+                        <div
+                            id="accionOtroWrapper"
+                            class="demanda-field"
+                            style="display:none; padding:0 14px 14px;"
+                        >
+                            <label for="demAccionOtro">
+                                Especifica la acción reclamada
+                                <span>*</span>
+                            </label>
+
+                            <input
+                                id="demAccionOtro"
+                                type="text"
+                                placeholder="Escribe la acción reclamada"
+                                autocomplete="off"
+                            >
                         </div>
 
                     </section>
@@ -715,72 +691,47 @@ export async function openDemandaForm() {
 
     `);
 
+  setToday();
 
-    setToday();
+  setupPartySelectors();
 
-    setupPartySelectors();
+  setupTerceros();
 
-    setupTerceros();
+  setupAccionOtro();
 
-    setupCancel();
+  setupCancel();
 
-    setupSubmit();
-
+  setupSubmit();
 }
-
 
 // ============================================================
 // ENTES
 // ============================================================
 
-function renderEntesOptions(
-    placeholder = "Seleccionar ente del catálogo"
-) {
+function renderEntesOptions(placeholder = "Seleccionar ente del catálogo") {
+  const activos = catalogoEntes.filter((ente) => ente.activo !== false);
 
-    const activos =
-        catalogoEntes.filter(
-            ente => ente.activo !== false
-        );
-
-
-    if (!activos.length) {
-
-        return `
+  if (!activos.length) {
+    return `
             <option value="">
                 Catálogo pendiente de cargar
             </option>
         `;
+  }
 
+  const grupos = {};
+
+  activos.forEach((ente) => {
+    const grupo = ente.grupo || "Otros";
+
+    if (!grupos[grupo]) {
+      grupos[grupo] = [];
     }
 
+    grupos[grupo].push(ente);
+  });
 
-    const grupos = {};
-
-
-    activos.forEach(
-        ente => {
-
-            const grupo =
-                ente.grupo ||
-                "Otros";
-
-
-            if (!grupos[grupo]) {
-
-                grupos[grupo] = [];
-
-            }
-
-
-            grupos[grupo].push(
-                ente
-            );
-
-        }
-    );
-
-
-    let html = `
+  let html = `
 
         <option value="">
             ${placeholder}
@@ -788,13 +739,8 @@ function renderEntesOptions(
 
     `;
 
-
-    Object
-        .entries(grupos)
-        .forEach(
-            ([grupo, entes]) => {
-
-                html += `
+  Object.entries(grupos).forEach(([grupo, entes]) => {
+    html += `
 
                     <optgroup
                         label="${escapeHTML(grupo)}"
@@ -802,50 +748,103 @@ function renderEntesOptions(
 
                 `;
 
-
-                entes.forEach(
-                    ente => {
-
-                        html += `
+    entes.forEach((ente) => {
+      html += `
 
                             <option
-                                value="${escapeHTML(
-                                    String(ente.id)
-                                )}"
+                                value="${escapeHTML(String(ente.id))}"
                             >
-                                ${escapeHTML(
-                                    ente.nombre
-                                )}
+                                ${escapeHTML(ente.nombre)}
                             </option>
 
                         `;
+    });
 
-                    }
-                );
-
-
-                html += `
+    html += `
                     </optgroup>
                 `;
+  });
 
-            }
-        );
-
-
-    return html;
-
+  return html;
 }
 
+const CATEGORIA_OTRO = "Otro";
+
+function getCategoriasEntes() {
+  const categorias = catalogoEntes
+    .filter((ente) => ente.activo !== false)
+    .map((ente) => ente.grupo || "Sin categoría");
+
+  return [...new Set(categorias)];
+}
+
+function renderCategoriaOptions() {
+  return `
+        <option value="">Seleccionar categoría</option>
+        ${getCategoriasEntes()
+          .map(
+            (c) => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`,
+          )
+          .join("")}
+        <option value="${CATEGORIA_OTRO}">Otro</option>
+    `;
+}
+
+function renderEntesDeCategoria(categoria) {
+  const entes = catalogoEntes.filter(
+    (ente) =>
+      ente.activo !== false && (ente.grupo || "Sin categoría") === categoria,
+  );
+
+  return `
+        <option value="">Seleccionar ente</option>
+        ${entes
+          .map(
+            (ente) =>
+              `<option value="${escapeHTML(String(ente.id))}">${escapeHTML(ente.nombre)}</option>`,
+          )
+          .join("")}
+    `;
+}
+
+// Bloque completo de persona moral: Categoría -> Ente (o input si es "Otro")
+function renderMoralFields(containerId, base) {
+  return `
+        <div id="${containerId}" class="demanda-dynamic-field demanda-moral-group" hidden>
+
+            <div class="demanda-field">
+                <label for="${base}Categoria">Categoría <span>*</span></label>
+                <select id="${base}Categoria">
+                    ${renderCategoriaOptions()}
+                </select>
+            </div>
+
+            <div id="${base}EnteWrap" class="demanda-field" hidden>
+                <label for="${base}Ente">Ente <span>*</span></label>
+                <select id="${base}Ente"></select>
+            </div>
+
+            <div id="${base}OtroWrap" class="demanda-field" hidden>
+                <label for="${base}Otro">Nombre del ente <span>*</span></label>
+                <input
+                    id="${base}Otro"
+                    type="text"
+                    placeholder="Escribe el nombre del ente"
+                    autocomplete="off"
+                >
+            </div>
+
+        </div>
+    `;
+}
 
 // ============================================================
 // ACCIONES RECLAMADAS
 // ============================================================
 
 function renderAccionesCheckboxes() {
-
-    if (!catalogoAcciones.length) {
-
-        return `
+  if (!catalogoAcciones.length) {
+    return `
 
             <div class="demanda-catalog-placeholder">
 
@@ -871,29 +870,19 @@ function renderAccionesCheckboxes() {
             </div>
 
         `;
+  }
 
-    }
-
-
-    return catalogoAcciones
-        .filter(
-            item =>
-                item.activo !== false
-        )
-        .map(
-            item => `
+  return catalogoAcciones
+    .filter((item) => item.activo !== false)
+    .map(
+      (item) => `
 
                 <label class="demanda-action-option">
 
                     <input
                         type="checkbox"
                         name="accionesReclamadas"
-                        value="${escapeHTML(
-                            String(
-                                item.id ||
-                                item.nombre
-                            )
-                        )}"
+                        value="${escapeHTML(String(item.id || item.nombre))}"
                     >
 
                     <span class="demanda-check">
@@ -903,315 +892,188 @@ function renderAccionesCheckboxes() {
                     </span>
 
                     <span>
-                        ${escapeHTML(
-                            item.nombre
-                        )}
+                        ${escapeHTML(item.nombre)}
                     </span>
 
                 </label>
 
-            `
-        )
-        .join("");
-
+            `,
+    )
+    .join("");
 }
-
 
 // ============================================================
 // FECHA
 // ============================================================
 
 function setToday() {
+  const input = document.getElementById("demFecha");
 
-    const input =
-        document.getElementById(
-            "demFecha"
-        );
+  if (!input) {
+    return;
+  }
 
+  const now = new Date();
 
-    if (!input) {
-        return;
-    }
+  const year = now.getFullYear();
 
+  const month = String(now.getMonth() + 1).padStart(2, "0");
 
-    const now =
-        new Date();
+  const day = String(now.getDate()).padStart(2, "0");
 
-
-    const year =
-        now.getFullYear();
-
-
-    const month =
-        String(
-            now.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const day =
-        String(
-            now.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    input.value =
-        `${year}-${month}-${day}`;
-
+  input.value = `${year}-${month}-${day}`;
 }
-
 
 // ============================================================
 // PERSONA FÍSICA / MORAL
 // ============================================================
-
 function setupPartySelectors() {
+  setupPartySelector({
+    tipo: "demActorTipo",
+    fisica: "actorFisicaContainer",
+    moral: "actorMoralContainer",
+    nombre: "demActorNombre",
+    base: "demActor",
+  });
 
-    setupPartySelector(
-        "demActorTipo",
-        "actorFisicaContainer",
-        "actorMoralContainer",
-        "demActorNombre",
-        "demActorEnte"
-    );
-
-
-    setupPartySelector(
-        "demDemandadoTipo",
-        "demandadoFisicaContainer",
-        "demandadoMoralContainer",
-        "demDemandadoNombre",
-        "demDemandadoEnte"
-    );
-
+  setupPartySelector({
+    tipo: "demDemandadoTipo",
+    fisica: "demandadoFisicaContainer",
+    moral: "demandadoMoralContainer",
+    nombre: "demDemandadoNombre",
+    base: "demDemandado",
+  });
 }
 
+function setupPartySelector({ tipo, fisica, moral, nombre, base }) {
+  const selector = document.getElementById(tipo);
+  const fisicaEl = document.getElementById(fisica);
+  const moralEl = document.getElementById(moral);
+  const nombreEl = document.getElementById(nombre);
 
-function setupPartySelector(
-    selectorId,
-    fisicaId,
-    moralId,
-    nombreId,
-    enteId
-) {
+  const categoria = document.getElementById(`${base}Categoria`);
+  const enteWrap = document.getElementById(`${base}EnteWrap`);
+  const ente = document.getElementById(`${base}Ente`);
+  const otroWrap = document.getElementById(`${base}OtroWrap`);
+  const otro = document.getElementById(`${base}Otro`);
 
-    const selector =
-        document.getElementById(
-            selectorId
-        );
+  if (!selector || !categoria || !ente || !otro) {
+    return;
+  }
 
+  // Muestra/oculta campos y ajusta cuáles son obligatorios
+  const sync = () => {
+    const esFisica = selector.value === "fisica";
+    const esMoral = selector.value === "moral";
+    const cat = categoria.value;
+    const esOtro = cat === CATEGORIA_OTRO;
 
-    const fisica =
-        document.getElementById(
-            fisicaId
-        );
+    fisicaEl.hidden = !esFisica;
+    moralEl.hidden = !esMoral;
 
-
-    const moral =
-        document.getElementById(
-            moralId
-        );
-
-
-    const nombre =
-        document.getElementById(
-            nombreId
-        );
-
-
-    const ente =
-        document.getElementById(
-            enteId
-        );
-
-
-    if (!selector) {
-        return;
+    if (nombreEl) {
+      nombreEl.required = esFisica;
     }
 
+    categoria.required = esMoral;
 
-    selector.addEventListener(
-        "change",
-        () => {
+    enteWrap.hidden = !cat || esOtro;
+    ente.required = esMoral && !!cat && !esOtro;
 
-            const tipo =
-                selector.value;
+    otroWrap.hidden = !esOtro;
+    otro.required = esMoral && esOtro;
+  };
 
+  selector.addEventListener("change", sync);
 
-            fisica.hidden =
-                tipo !== "fisica";
+  categoria.addEventListener("change", () => {
+    ente.innerHTML = renderEntesDeCategoria(categoria.value);
+    ente.value = "";
+    otro.value = "";
 
+    sync();
 
-            moral.hidden =
-                tipo !== "moral";
-
-
-            if (nombre) {
-
-                nombre.required =
-                    tipo === "fisica";
-
-            }
-
-
-            if (ente) {
-
-                ente.required =
-                    tipo === "moral";
-
-            }
-
-        }
-    );
-
+    if (categoria.value === CATEGORIA_OTRO) {
+      otro.focus();
+    }
+  });
 }
-
 
 // ============================================================
 // TERCEROS
 // ============================================================
 
 function setupTerceros() {
+  const button = document.getElementById("addTerceroBtn");
 
-    const button =
-        document.getElementById(
-            "addTerceroBtn"
-        );
+  if (!button) {
+    return;
+  }
 
-
-    if (!button) {
-        return;
-    }
-
-
-    button.addEventListener(
-        "click",
-        addTercero
-    );
-
+  button.addEventListener("click", addTercero);
 }
-
 
 function addTercero() {
+  const catalogSelect = document.getElementById("demTerceroCatalogo");
 
-    const catalogSelect =
-        document.getElementById(
-            "demTerceroCatalogo"
-        );
+  const manualInput = document.getElementById("demTerceroManual");
 
+  const catalogId = catalogSelect?.value || "";
 
-    const manualInput =
-        document.getElementById(
-            "demTerceroManual"
-        );
+  const manual = manualInput?.value.trim() || "";
 
+  if (!catalogId && !manual) {
+    return;
+  }
 
-    const catalogId =
-        catalogSelect?.value || "";
+  if (catalogId) {
+    const ente = catalogoEntes.find(
+      (item) => String(item.id || item.nombre) === String(catalogId),
+    );
 
+    if (ente) {
+      tercerosTemporales.push({
+        id: createId(),
 
-    const manual =
-        manualInput?.value.trim() || "";
+        tipo: "catalogo",
 
+        enteId: catalogId,
 
-    if (!catalogId && !manual) {
-        return;
+        nombre: ente.nombre,
+      });
     }
+  }
 
+  if (manual) {
+    tercerosTemporales.push({
+      id: createId(),
 
-    if (catalogId) {
+      tipo: "manual",
 
-        const ente =
-            catalogoEntes.find(
-                item =>
-                    String(
-                        item.id ||
-                        item.nombre
-                    )
-                    ===
-                    String(
-                        catalogId
-                    )
-            );
+      nombre: manual,
+    });
+  }
 
+  if (catalogSelect) {
+    catalogSelect.value = "";
+  }
 
-        if (ente) {
+  if (manualInput) {
+    manualInput.value = "";
+  }
 
-            tercerosTemporales.push({
-
-                id:
-                    createId(),
-
-                tipo:
-                    "catalogo",
-
-                enteId:
-                    catalogId,
-
-                nombre:
-                    ente.nombre
-
-            });
-
-        }
-
-    }
-
-
-    if (manual) {
-
-        tercerosTemporales.push({
-
-            id:
-                createId(),
-
-            tipo:
-                "manual",
-
-            nombre:
-                manual
-
-        });
-
-    }
-
-
-    if (catalogSelect) {
-        catalogSelect.value = "";
-    }
-
-
-    if (manualInput) {
-        manualInput.value = "";
-    }
-
-
-    renderTerceros();
-
+  renderTerceros();
 }
 
-
 function renderTerceros() {
+  const container = document.getElementById("tercerosList");
 
-    const container =
-        document.getElementById(
-            "tercerosList"
-        );
+  if (!container) {
+    return;
+  }
 
-
-    if (!container) {
-        return;
-    }
-
-
-    if (!tercerosTemporales.length) {
-
-        container.innerHTML = `
+  if (!tercerosTemporales.length) {
+    container.innerHTML = `
 
             <div class="demanda-empty-inline">
 
@@ -1225,15 +1087,12 @@ function renderTerceros() {
 
         `;
 
-        return;
+    return;
+  }
 
-    }
-
-
-    container.innerHTML =
-        tercerosTemporales.map(
-
-            tercero => `
+  container.innerHTML = tercerosTemporales
+    .map(
+      (tercero) => `
 
                 <div class="demanda-tercero-chip">
 
@@ -1242,19 +1101,16 @@ function renderTerceros() {
                         <span>
 
                             ${
-                                tercero.tipo ===
-                                "catalogo"
-                                    ? "Catálogo"
-                                    : "Manual"
+                              tercero.tipo === "catalogo"
+                                ? "Catálogo"
+                                : "Manual"
                             }
 
                         </span>
 
                         <strong>
 
-                            ${escapeHTML(
-                                tercero.nombre
-                            )}
+                            ${escapeHTML(tercero.nombre)}
 
                         </strong>
 
@@ -1272,415 +1128,231 @@ function renderTerceros() {
 
                 </div>
 
-            `
+            `,
+    )
+    .join("");
 
-        ).join("");
+  container.querySelectorAll("[data-tercero-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      tercerosTemporales = tercerosTemporales.filter(
+        (item) => item.id !== button.dataset.terceroId,
+      );
 
-
-    container
-        .querySelectorAll(
-            "[data-tercero-id]"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        tercerosTemporales =
-                            tercerosTemporales.filter(
-                                item =>
-                                    item.id !==
-                                    button.dataset
-                                        .terceroId
-                            );
-
-
-                        renderTerceros();
-
-                    }
-                );
-
-            }
-        );
-
+      renderTerceros();
+    });
+  });
 }
-
 
 // ============================================================
 // CANCELAR
 // ============================================================
 
 function setupCancel() {
-
-    document
-        .getElementById(
-            "cancelDemandaBtn"
-        )
-        ?.addEventListener(
-            "click",
-            closeForm
-        );
-
+  document
+    .getElementById("cancelDemandaBtn")
+    ?.addEventListener("click", closeForm);
 }
-
 
 // ============================================================
 // SUBMIT
 // ============================================================
 
 function setupSubmit() {
-
-    document
-        .getElementById(
-            "demandaFormElement"
-        )
-        ?.addEventListener(
-            "submit",
-            saveDemanda
-        );
-
+  document
+    .getElementById("demandaFormElement")
+    ?.addEventListener("submit", saveDemanda);
 }
-
 
 // ============================================================
 // GUARDAR
 // ============================================================
 
-function saveDemanda(
-    event
-) {
+function saveDemanda(event) {
+  event.preventDefault();
 
-    event.preventDefault();
+  const actor = getPartyData("demActorTipo", "demActorNombre", "demActor");
 
+  const demandado = getPartyData(
+    "demDemandadoTipo",
+    "demDemandadoNombre",
+    "demDemandado",
+  );
 
-    const actor =
-        getPartyData(
-            "demActorTipo",
-            "demActorNombre",
-            "demActorEnte"
-        );
+  if (!actor.nombre || !demandado.nombre) {
+    alert("Completa los datos del actor y del demandado.");
 
+    return;
+  }
 
-    const demandado =
-        getPartyData(
-            "demDemandadoTipo",
-            "demDemandadoNombre",
-            "demDemandadoEnte"
-        );
+  const manualOtro =
+    document.getElementById("demAccionOtro")?.value.trim() || "";
 
+  const acciones = Array.from(
+    document.querySelectorAll('input[name="accionesReclamadas"]:checked'),
+  ).map((input) => {
+    const item = catalogoAcciones.find(
+      (action) => String(action.id || action.nombre) === input.value,
+    );
 
-    if (
-        !actor.nombre ||
-        !demandado.nombre
-    ) {
+    const esOtros = input.value === "otros";
 
-        alert(
-            "Completa los datos del actor y del demandado."
-        );
-
-        return;
-
-    }
-
-
-    const acciones =
-        Array
-            .from(
-                document.querySelectorAll(
-                    'input[name="accionesReclamadas"]:checked'
-                )
-            )
-            .map(
-                input => {
-
-                    const item =
-                        catalogoAcciones.find(
-                            action =>
-                                String(
-                                    action.id ||
-                                    action.nombre
-                                )
-                                ===
-                                input.value
-                        );
-
-
-                    return {
-
-                        id:
-                            input.value,
-
-                        nombre:
-                            item?.nombre ||
-                            input.value
-
-                    };
-
-                }
-            );
-
-
-    if (
-        catalogoAcciones.length &&
-        acciones.length === 0
-    ) {
-
-        alert(
-            "Selecciona al menos una acto demandado."
-        );
-
-        return;
-
-    }
-
-
-    const demandas =
-        getData(
-            "demandas",
-            []
-        );
-
-
-    // La Demanda origina el Expediente: el folio se genera aquí y
-    // se reutiliza tanto en la demanda como en el expediente creado.
-    const expedientes = getData("expedientes", []);
-    const anioActual = new Date().getFullYear();
-    const patronExpediente = new RegExp(`^EXP-${anioActual}-(\\d+)$`, "i");
-
-    const ultimoConsecutivo = expedientes.reduce((maximo, item) => {
-        const numero = String(item.numero || item.expediente || "").trim();
-        const coincidencia = numero.match(patronExpediente);
-
-        if (!coincidencia) {
-            return maximo;
-        }
-
-        return Math.max(maximo, Number(coincidencia[1]) || 0);
-    }, 0);
-
-    const numeroExpediente = `EXP-${anioActual}-${String(ultimoConsecutivo + 1).padStart(3, "0")}`;
-
-    const nuevaDemanda = {
-
-        id:
-            createId(),
-
-        expediente:
-            numeroExpediente,
-
-        fecha:
-            document
-                .getElementById(
-                    "demFecha"
-                )
-                .value,
-
-        observacionesFecha:
-            document
-                .getElementById(
-                    "demObservacionesFecha"
-                )
-                .value
-                .trim(),
-
-        actorTipo:
-            actor.tipo,
-
-        actorNombre:
-            actor.nombre,
-
-        actorEnteId:
-            actor.enteId,
-
-        actor:
-            actor.nombre,
-
-        demandadoTipo:
-            demandado.tipo,
-
-        demandadoNombre:
-            demandado.nombre,
-
-        demandadoEnteId:
-            demandado.enteId,
-
-        demandado:
-            demandado.nombre,
-
-        terceros:
-            [...tercerosTemporales],
-
-        accionesReclamadas:
-            acciones,
-
-        accion:
-            acciones
-                .map(
-                    item =>
-                        item.nombre
-                )
-                .join(", "),
-
-        actos:
-            acciones
-                .map(
-                    item =>
-                        item.nombre
-                )
-                .join(", "),
-
-        estado:
-            document
-                .getElementById(
-                    "demEstado"
-                )
-                .value,
-
-        creadoEn:
-            new Date()
-                .toISOString()
-
+    return {
+      id: input.value,
+      nombre: esOtros ? manualOtro || "Otros" : item?.nombre || input.value,
+      manual: esOtros,
     };
+  });
 
+  if (catalogoAcciones.length && acciones.length === 0) {
+    alert("Selecciona al menos una acción demandada.");
 
-    demandas.unshift(
-        nuevaDemanda
-    );
+    return;
+  }
 
+  const demandas = getData("demandas", []);
 
-    saveData(
-        "demandas",
-        demandas
-    );
+  // La Demanda origina el Expediente: el folio se genera aquí y
+  // se reutiliza tanto en la demanda como en el expediente creado.
+  const expedientes = getData("expedientes", []);
+  const anioActual = new Date().getFullYear();
+  const patronExpediente = new RegExp(`^EXP-${anioActual}-(\\d+)$`, "i");
 
+  const ultimoConsecutivo = expedientes.reduce((maximo, item) => {
+    const numero = String(item.numero || item.expediente || "").trim();
+    const coincidencia = numero.match(patronExpediente);
 
-    // La demanda es el origen del expediente. Conservamos la clave
-    // `expedientes` para que Amparos y los demás módulos sigan
-    // trabajando con la misma fuente de referencia.
-    expedientes.unshift({
-        id: createId(),
-        numero: nuevaDemanda.expediente,
-        expediente: nuevaDemanda.expediente,
-        fecha: nuevaDemanda.fecha,
-        fechaRecepcion: nuevaDemanda.fecha,
-        actor: nuevaDemanda.actor,
-        demandado: nuevaDemanda.demandado,
-        actoDemandado: nuevaDemanda.actos || nuevaDemanda.accion || "",
-        estado: nuevaDemanda.estado,
-        clasificacion: "",
-        ubicacion: "",
-        demandaId: nuevaDemanda.id,
-        origen: "demanda",
-        creadoEn: nuevaDemanda.creadoEn
-    });
-
-    saveData("expedientes", expedientes);
-
-
-    closeForm();
-
-
-    if (window.renderDemandas) {
-        window.renderDemandas();
+    if (!coincidencia) {
+      return maximo;
     }
 
+    return Math.max(maximo, Number(coincidencia[1]) || 0);
+  }, 0);
 
-    if (window.initDashboardPage) {
-        window.initDashboardPage();
-    }
+  const numeroExpediente = `EXP-${anioActual}-${String(ultimoConsecutivo + 1).padStart(3, "0")}`;
 
+  const nuevaDemanda = {
+    id: createId(),
+
+    expediente: numeroExpediente,
+
+    fecha: document.getElementById("demFecha").value,
+
+    observacionesFecha: document
+      .getElementById("demObservacionesFecha")
+      .value.trim(),
+
+    actorTipo: actor.tipo,
+
+    actorNombre: actor.nombre,
+
+    actorEnteId: actor.enteId,
+
+    actorCategoria: actor.categoria,
+
+    actor: actor.nombre,
+
+    demandadoTipo: demandado.tipo,
+
+    demandadoNombre: demandado.nombre,
+
+    demandadoEnteId: demandado.enteId,
+
+    demandadoCategoria: demandado.categoria,
+
+    demandado: demandado.nombre,
+
+    terceros: [...tercerosTemporales],
+
+    accionesReclamadas: acciones,
+
+    accion: acciones.map((item) => item.nombre).join(", "),
+
+    actos: acciones.map((item) => item.nombre).join(", "),
+
+    estado: document.getElementById("demEstado").value,
+
+    creadoEn: new Date().toISOString(),
+  };
+
+  demandas.unshift(nuevaDemanda);
+
+  saveData("demandas", demandas);
+
+  // La demanda es el origen del expediente. Conservamos la clave
+  // `expedientes` para que Amparos y los demás módulos sigan
+  // trabajando con la misma fuente de referencia.
+  expedientes.unshift({
+    id: createId(),
+    numero: nuevaDemanda.expediente,
+    expediente: nuevaDemanda.expediente,
+    fecha: nuevaDemanda.fecha,
+    fechaRecepcion: nuevaDemanda.fecha,
+    actor: nuevaDemanda.actor,
+    demandado: nuevaDemanda.demandado,
+    actoDemandado: nuevaDemanda.actos || nuevaDemanda.accion || "",
+    estado: nuevaDemanda.estado,
+    clasificacion: "",
+    ubicacion: "",
+    demandaId: nuevaDemanda.id,
+    origen: "demanda",
+    creadoEn: nuevaDemanda.creadoEn,
+  });
+
+  saveData("expedientes", expedientes);
+
+  closeForm();
+
+  if (window.renderDemandas) {
+    window.renderDemandas();
+  }
+
+  if (window.initDashboardPage) {
+    window.initDashboardPage();
+  }
 }
-
 
 // ============================================================
 // DATOS DE PARTE
 // ============================================================
 
-function getPartyData(
-    tipoId,
-    nombreId,
-    enteId
-) {
+function getPartyData(tipoId, nombreId, base) {
+  const tipo = document.getElementById(tipoId)?.value || "";
 
-    const tipo =
-        document
-            .getElementById(
-                tipoId
-            )
-            ?.value || "";
+  if (tipo === "fisica") {
+    return {
+      tipo: "fisica",
+      nombre: document.getElementById(nombreId)?.value.trim() || "",
+      enteId: null,
+      categoria: "",
+    };
+  }
 
+  if (tipo === "moral") {
+    const categoria = document.getElementById(`${base}Categoria`)?.value || "";
 
-    if (tipo === "fisica") {
-
-        return {
-
-            tipo:
-                "fisica",
-
-            nombre:
-                document
-                    .getElementById(
-                        nombreId
-                    )
-                    ?.value
-                    .trim() || "",
-
-            enteId:
-                null
-
-        };
-
+    // "Otro": el nombre se captura manualmente
+    if (categoria === CATEGORIA_OTRO) {
+      return {
+        tipo: "moral",
+        nombre: document.getElementById(`${base}Otro`)?.value.trim() || "",
+        enteId: null,
+        categoria: CATEGORIA_OTRO,
+      };
     }
 
+    const selectedId = document.getElementById(`${base}Ente`)?.value || "";
 
-    if (tipo === "moral") {
-
-        const selectedId =
-            document
-                .getElementById(
-                    enteId
-                )
-                ?.value || "";
-
-
-        const ente =
-            catalogoEntes.find(
-                item =>
-                    String(
-                        item.id ||
-                        item.nombre
-                    )
-                    ===
-                    String(
-                        selectedId
-                    )
-            );
-
-
-        return {
-
-            tipo:
-                "moral",
-
-            nombre:
-                ente?.nombre || "",
-
-            enteId:
-                selectedId || null
-
-        };
-
-    }
-
+    const ente = catalogoEntes.find(
+      (item) => String(item.id || item.nombre) === String(selectedId),
+    );
 
     return {
-
-        tipo: "",
-        nombre: "",
-        enteId: null
-
+      tipo: "moral",
+      nombre: ente?.nombre || "",
+      enteId: selectedId || null,
+      categoria,
     };
+  }
 
+  return { tipo: "", nombre: "", enteId: null, categoria: "" };
 }

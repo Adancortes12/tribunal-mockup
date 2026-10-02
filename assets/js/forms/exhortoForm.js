@@ -13,12 +13,93 @@ import {
   formSection,
 } from "./formKit.js";
 
-import { createId } from "../utils.js";
+import { createId, escapeHTML, normalizeText } from "../utils.js";
 
 import { getData, saveData } from "../storage.js";
 
 export function initExhortoForm() {
   window.openExhortoForm = openExhortoForm;
+}
+
+// Busca un expediente por folio (ignora mayúsculas y acentos)
+function findExpedienteByFolio(folio) {
+  const objetivo = normalizeText(folio);
+
+  if (!objetivo) return null;
+
+  return (
+    getData("expedientes", []).find(
+      (item) => normalizeText(item.numero) === objetivo,
+    ) || null
+  );
+}
+
+// Al marcar "Exhorto interno" aparece el buscador de folio
+function setupInternoListener() {
+  const checkbox = document.getElementById("exhortoInterno");
+  if (!checkbox) return;
+
+  const anchor = checkbox.closest(".tf-option") || checkbox.parentElement;
+
+  const container = document.createElement("div");
+  container.id = "exhortoInternoContainer";
+  container.className = "tf-field tf-full";
+  container.hidden = true;
+  container.innerHTML = `
+    <label for="folioExpedienteExhorto">Folio de expediente</label>
+    <input
+      id="folioExpedienteExhorto"
+      type="text"
+      placeholder="Ej. EXP-2026-001"
+      autocomplete="off"
+    >
+    <div id="folioExpedienteInfo" style="margin-top:8px;"></div>
+  `;
+
+  anchor.insertAdjacentElement("afterend", container);
+
+  const input = container.querySelector("#folioExpedienteExhorto");
+  const info = container.querySelector("#folioExpedienteInfo");
+
+  const renderInfo = () => {
+    const folio = input.value.trim();
+
+    if (!folio) {
+      info.innerHTML = "";
+      return;
+    }
+
+    const expediente = findExpedienteByFolio(folio);
+
+    if (expediente) {
+      info.innerHTML = `
+        <div style="padding:10px 12px;border:1px solid #dce3ea;border-radius:7px;background:#e8f1ff;color:#102b45;font-size:13px;">
+          <i class="fa-solid fa-paperclip"></i>
+          Este oficio se vinculará al expediente
+          <strong>${escapeHTML(expediente.numero)}</strong>
+        </div>
+      `;
+    } else {
+      info.innerHTML = `
+        <span style="color:#7d8fa0;font-size:12px;">
+          No se encontró un expediente con ese folio.
+        </span>
+      `;
+    }
+  };
+
+  checkbox.addEventListener("change", () => {
+    container.hidden = !checkbox.checked;
+
+    if (checkbox.checked) {
+      input.focus();
+    } else {
+      input.value = "";
+      info.innerHTML = "";
+    }
+  });
+
+  input.addEventListener("input", renderInfo);
 }
 
 export function openExhortoForm() {
@@ -66,16 +147,22 @@ export function openExhortoForm() {
       formSection({
         number: 2,
         title: "Partes y autoridad",
-        description: "Actor demandado y autoridad exhortante.",
+        description: "Actor, demandado y autoridad exhortante.",
         fields: [
           inputField({
-            id: "actorDemandado",
-            label: "Actor demandado",
+            id: "actorExhorto",
+            label: "Actor",
+          }),
+
+          inputField({
+            id: "demandadoExhorto",
+            label: "Demandado",
           }),
 
           inputField({
             id: "autoridadExhortante",
             label: "Autoridad exhortante",
+            full: true,
           }),
         ],
       }),
@@ -117,6 +204,8 @@ export function openExhortoForm() {
       }),
     ],
   });
+
+  setupInternoListener();
 }
 
 function saveExhorto(event) {
@@ -129,9 +218,15 @@ function saveExhorto(event) {
     numero: numeroExhorto.value,
     fecha: fechaExhorto.value,
     origen: origenExhorto.value,
-    actorDemandado: actorDemandado.value,
+    actor: document.getElementById("actorExhorto")?.value || "",
+    demandado: document.getElementById("demandadoExhorto")?.value || "",
     autoridad: autoridadExhortante.value,
     interno: exhortoInterno.checked,
+    expedienteVinculado: exhortoInterno.checked
+      ? findExpedienteByFolio(
+          document.getElementById("folioExpedienteExhorto")?.value,
+        )?.numero || ""
+      : "",
     requerimiento: requerimientoExhorto.value,
     promocion: promocionExhorto.value,
     estado: estadoExhorto.value,

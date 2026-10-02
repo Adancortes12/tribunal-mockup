@@ -39,7 +39,7 @@ export function renderExhortos() {
 
         <tr>
 
-        <td colspan="8">
+        <td colspan="9">
 
         No existen exhortos registrados.
 
@@ -93,9 +93,11 @@ ${escapeHTML(item.origen)}
 
 
 <td>
+${escapeHTML(item.actor || item.actorDemandado)}
+</td>
 
-${escapeHTML(item.actorDemandado)}
-
+<td>
+${escapeHTML(item.demandado)}
 </td>
 
 
@@ -573,18 +575,13 @@ ${escapeHTML(exhorto.autoridad)}
 
 
 <div class="detail-item">
+<span>Actor</span>
+<strong>${escapeHTML(exhorto.actor || exhorto.actorDemandado) || "—"}</strong>
+</div>
 
-<span>
-Actor/Demandado
-</span>
-
-
-<strong>
-
-${escapeHTML(exhorto.actorDemandado)}
-
-</strong>
-
+<div class="detail-item">
+<span>Demandado</span>
+<strong>${escapeHTML(exhorto.demandado) || "—"}</strong>
 </div>
 
 
@@ -624,6 +621,16 @@ ${escapeHTML(exhorto.ubicacion)}
 </strong>
 
 </div>
+
+${
+  exhorto.expedienteVinculado
+    ? `
+<div class="detail-item">
+<span>Expediente vinculado</span>
+<strong>${escapeHTML(exhorto.expedienteVinculado)}</strong>
+</div>`
+    : ""
+}
 
 
 

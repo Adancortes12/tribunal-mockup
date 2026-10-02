@@ -88,7 +88,7 @@ export function renderEntesTable() {
           </div>
         </td>
       </tr>
-    `
+    `,
     )
     .join("");
 }
@@ -171,16 +171,17 @@ function saveEnte(event) {
   if (originalId) {
     // Editar
     listaEntes = listaEntes.map((item) =>
-      item.id === originalId ? { ...item, nombre, grupo, activo } : item
+      item.id === originalId ? { ...item, nombre, grupo, activo } : item,
     );
   } else {
     // Agregar nuevo
-    const idGenerado = nombre
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || createId();
+    const idGenerado =
+      nombre
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || createId();
 
     listaEntes.push({
       id: idGenerado,
@@ -198,7 +199,7 @@ function saveEnte(event) {
 export function toggleEnteStatus(id) {
   let listaEntes = getData("entes", []);
   listaEntes = listaEntes.map((item) =>
-    item.id === id ? { ...item, activo: !item.activo } : item
+    item.id === id ? { ...item, activo: !item.activo } : item,
   );
   saveData("entes", listaEntes);
   renderEntesTable();
@@ -223,12 +224,17 @@ export function renderCatalogos() {
 // =====================================================
 async function syncActosDemandadosData() {
   const locales = getData("actosDemandados", null);
-  if (locales !== null) { actosDemandados = locales; return; }
+  if (Array.isArray(locales) && locales.length) {
+    actosDemandados = locales;
+    return;
+  }
   try {
     const response = await fetch("assets/data/acciones-reclamadas.json");
     const json = response.ok ? await response.json() : { acciones: [] };
-    actosDemandados = Array.isArray(json) ? json : (json.acciones || []);
-  } catch { actosDemandados = []; }
+    actosDemandados = Array.isArray(json) ? json : json.acciones || [];
+  } catch {
+    actosDemandados = [];
+  }
   saveData("actosDemandados", actosDemandados);
 }
 
@@ -240,27 +246,34 @@ function renderActosDemandadosTable() {
     table.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#64748b;padding:24px">No hay actos demandados cargados. Agrega únicamente los valores oficiales proporcionados por el Tribunal.</td></tr>`;
     return;
   }
-  table.innerHTML = actosDemandados.map(item => `
+  table.innerHTML = actosDemandados
+    .map(
+      (item) => `
     <tr><td><code class="id-code">${escapeHTML(item.id)}</code></td><td><strong>${escapeHTML(item.nombre)}</strong></td>
     <td><span class="status-badge ${item.activo !== false ? "status-recibido" : "status-pendiente"}">${item.activo !== false ? "Activo" : "Inactivo"}</span></td>
     <td class="actions-cell"><div class="action-buttons-group">
       <button class="table-action" onclick="openActoDemandadoForm('${escapeJS(item.id)}')">Editar</button>
       <button class="table-action" onclick="toggleActoDemandadoStatus('${escapeJS(item.id)}')">${item.activo !== false ? "Desactivar" : "Activar"}</button>
       <button class="table-action text-danger" onclick="deleteActoDemandado('${escapeJS(item.id)}')">Eliminar</button>
-    </div></td></tr>`).join("");
+    </div></td></tr>`,
+    )
+    .join("");
 }
 
 function openActoDemandadoForm(id = null) {
   actosDemandados = getData("actosDemandados", []);
-  const item = id ? actosDemandados.find(x => x.id === id) : null;
-  const modal = document.getElementById("modalContent"); if (!modal) return;
+  const item = id ? actosDemandados.find((x) => x.id === id) : null;
+  const modal = document.getElementById("modalContent");
+  if (!modal) return;
   modal.innerHTML = `<div class="form-header"><span>Catálogos</span><h2>${item ? "Editar" : "Agregar"} Acto Demandado</h2></div>
     <div class="form-body"><form id="actoDemandadoForm"><input type="hidden" id="actoOriginalId" value="${item ? escapeHTML(item.id) : ""}">
     <div class="form-grid"><div class="field full"><label>Nombre del acto *</label><input id="actoNombre" required value="${item ? escapeHTML(item.nombre) : ""}" placeholder="Valor oficial del Tribunal"></div>
     <div class="field"><label>Estado</label><select id="actoActivo"><option value="true" ${!item || item.activo !== false ? "selected" : ""}>Activo</option><option value="false" ${item && item.activo === false ? "selected" : ""}>Inactivo</option></select></div></div>
     <div class="form-actions" style="margin-top:20px"><button type="button" class="secondary-btn" onclick="closeModal()">Cancelar</button><button type="submit" class="primary-btn">Guardar Acto</button></div></form></div>`;
   document.getElementById("modal")?.classList.add("show");
-  document.getElementById("actoDemandadoForm")?.addEventListener("submit", saveActoDemandado);
+  document
+    .getElementById("actoDemandadoForm")
+    ?.addEventListener("submit", saveActoDemandado);
 }
 
 function saveActoDemandado(event) {
@@ -269,20 +282,39 @@ function saveActoDemandado(event) {
   const nombre = document.getElementById("actoNombre").value.trim();
   const activo = document.getElementById("actoActivo").value === "true";
   let lista = getData("actosDemandados", []);
-  if (originalId) lista = lista.map(item => item.id === originalId ? { ...item, nombre, activo } : item);
+  if (originalId)
+    lista = lista.map((item) =>
+      item.id === originalId ? { ...item, nombre, activo } : item,
+    );
   else {
-    let id = nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || createId();
-    if (lista.some(item => item.id === id)) id = `${id}-${String(createId()).slice(-4)}`;
+    let id =
+      nombre
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || createId();
+    if (lista.some((item) => item.id === id))
+      id = `${id}-${String(createId()).slice(-4)}`;
     lista.push({ id, nombre, activo });
   }
-  saveData("actosDemandados", lista); renderActosDemandadosTable(); closeModal();
+  saveData("actosDemandados", lista);
+  renderActosDemandadosTable();
+  closeModal();
 }
 
 function toggleActoDemandadoStatus(id) {
-  let lista = getData("actosDemandados", []).map(item => item.id === id ? { ...item, activo: item.activo === false } : item);
-  saveData("actosDemandados", lista); renderActosDemandadosTable();
+  let lista = getData("actosDemandados", []).map((item) =>
+    item.id === id ? { ...item, activo: item.activo === false } : item,
+  );
+  saveData("actosDemandados", lista);
+  renderActosDemandadosTable();
 }
 function deleteActoDemandado(id) {
   if (!confirm("¿Deseas eliminar este acto demandado del catálogo?")) return;
-  saveData("actosDemandados", getData("actosDemandados", []).filter(item => item.id !== id)); renderActosDemandadosTable();
+  saveData(
+    "actosDemandados",
+    getData("actosDemandados", []).filter((item) => item.id !== id),
+  );
+  renderActosDemandadosTable();
 }

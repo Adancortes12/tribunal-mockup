@@ -264,36 +264,42 @@ function createAmparoRow(amparo) {
             <!-- ACCIONES -->
 
             <td>
+                <div class="amparo-actions-wrap">
+                    <div class="amparo-row-actions">
+                        <button
+                            type="button"
+                            class="amparo-detail-button"
+                            title="Ver detalle"
+                            aria-label="Ver detalle"
+                            data-amparo-detail="${escapeHTML(String(amparo.id))}"
+                        >
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Ver detalle</span>
+                        </button>
 
-                <div class="amparo-row-actions">
-                    <button
-                        type="button"
-                        class="amparo-detail-button"
-                        data-amparo-detail="${escapeHTML(String(amparo.id))}"
-                    >
-                        <i class="fa-solid fa-eye"></i>
-                        <span>Ver detalle</span>
-                    </button>
+                        <button
+                            type="button"
+                            class="amparo-detail-button"
+                            title="Editar"
+                            aria-label="Editar"
+                            data-amparo-edit="${escapeHTML(String(amparo.id))}"
+                        >
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Editar</span>
+                        </button>
 
-                    <button
-                        type="button"
-                        class="amparo-detail-button"
-                        data-amparo-edit="${escapeHTML(String(amparo.id))}"
-                    >
-                        <i class="fa-solid fa-pen"></i>
-                        <span>Editar</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        class="amparo-attach-button"
-                        data-amparo-oficio="${escapeHTML(String(amparo.id))}"
-                    >
-                        <i class="fa-solid fa-paperclip"></i>
-                        <span>Anexar oficio</span>
-                    </button>
+                        <button
+                            type="button"
+                            class="amparo-attach-button"
+                            title="Anexar oficio"
+                            aria-label="Anexar oficio"
+                            data-amparo-oficio="${escapeHTML(String(amparo.id))}"
+                        >
+                            <i class="fa-solid fa-paperclip"></i>
+                            <span>Anexar oficio</span>
+                        </button>
+                    </div>
                 </div>
-
             </td>
 
 
@@ -327,7 +333,6 @@ function bindRowActions() {
     };
   });
 }
-
 
 // ============================================================
 // DETALLE E HISTÓRICO DEL AMPARO
@@ -364,7 +369,9 @@ function verDetalleAmparo(amparoId) {
     ...oficios.map((oficio) => ({
       fecha: oficio.creadoEn || oficio.fechaRecepcion || oficio.fecha || "",
       titulo: `Oficio ${oficio.numero || "sin número"}`,
-      detalle: oficio.asunto || `Oficio vinculado al amparo · ${oficio.estado || "Registrado"}`,
+      detalle:
+        oficio.asunto ||
+        `Oficio vinculado al amparo · ${oficio.estado || "Registrado"}`,
       icono: "fa-file-lines",
     })),
   ].sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
@@ -432,9 +439,12 @@ function verDetalleAmparo(amparoId) {
     </div>
   `);
 
-  document.getElementById("editAmparoDetailBtn")?.addEventListener("click", () => {
-    if (typeof window.openAmparoForm === "function") window.openAmparoForm(amparo.id);
-  });
+  document
+    .getElementById("editAmparoDetailBtn")
+    ?.addEventListener("click", () => {
+      if (typeof window.openAmparoForm === "function")
+        window.openAmparoForm(amparo.id);
+    });
 }
 
 function detailField(label, value, full = false) {
@@ -451,8 +461,11 @@ function formatDateTimeDetail(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("es-MX", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit"
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 

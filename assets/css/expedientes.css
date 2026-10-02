@@ -17,7 +17,7 @@
   color: #2b72d6;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: .08em;
+  letter-spacing: 0.08em;
 }
 
 .expediente-detail-header h2 {
@@ -170,4 +170,93 @@
   }
 }
 
-.expediente-detail-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.expediente-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================
+   MODAL DE DETALLE: tamaño y scroll interno
+   ========================================================== */
+#modal.show:has(.expediente-detail-shell) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 18px !important;
+}
+
+#modal.show:has(.expediente-detail-shell) .modal-card {
+  width: 780px !important;
+  max-width: calc(100vw - 50px) !important;
+  max-height: 88vh !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+#modal.show:has(.expediente-detail-shell) #modalContent {
+  width: 100% !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.expediente-detail-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  background: #f5f7fa;
+}
+
+.expediente-detail-header {
+  padding: 18px 22px 15px;
+  background: #fff;
+}
+
+.expediente-detail-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+/* Documentos */
+.expediente-doc-list {
+  display: grid;
+  gap: 10px;
+}
+
+.expediente-doc-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e1e8ef;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.expediente-doc-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.expediente-doc-content p {
+  margin: 4px 0;
+  color: #4c647b;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.expediente-doc-content small {
+  color: #7d8fa0;
+  font-size: 11px;
+}
+
+.expediente-doc-type {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #1768cf;
+  font-size: 10px;
+  font-weight: 700;
+}

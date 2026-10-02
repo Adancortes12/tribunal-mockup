@@ -2,21 +2,11 @@
 // FORMULARIO DE AMPARO
 // ============================================================
 
-import {
-    showModal,
-    closeForm
-} from "./formHelper.js";
+import { showModal, closeForm } from "./formHelper.js";
 
-import {
-    createId,
-    escapeHTML
-} from "../utils.js";
+import { createId, escapeHTML } from "../utils.js";
 
-import {
-    getData,
-    saveData
-} from "../storage.js";
-
+import { getData, saveData } from "../storage.js";
 
 // ============================================================
 // DATOS
@@ -24,119 +14,53 @@ import {
 
 let expedientesReferencia = [];
 
-
 // ============================================================
 // INIT
 // ============================================================
 
 export function initAmparoForm() {
-
-    window.openAmparoForm =
-        openAmparoForm;
-
+  window.openAmparoForm = openAmparoForm;
 }
-
 
 // ============================================================
 // CARGAR EXPEDIENTES
 // ============================================================
 
 async function loadExpedientesReference() {
+  // Los expedientes se originan en Demandas y viven en localStorage.
+  const locales = getData("expedientes", []);
 
-    let ejemplos = [];
+  const mapa = new Map();
 
-    try {
+  locales.forEach((expediente) => {
+    const numero = expediente.numero || expediente.expediente;
 
-        const url =
-            new URL(
-                "../../data/expedientes-ejemplo.json",
-                import.meta.url
-            );
-
-        const response =
-            await fetch(url);
-
-        if (response.ok) {
-
-            const data =
-                await response.json();
-
-            ejemplos =
-                data.expedientes || [];
-
-        }
-
-    }
-    catch (error) {
-
-        console.warn(
-            "No se pudo cargar expedientes-ejemplo.json",
-            error
-        );
-
+    if (!numero) {
+      return;
     }
 
+    mapa.set(String(numero).toLowerCase(), {
+      ...expediente,
+      numero,
+    });
+  });
 
-    // También usamos los expedientes creados
-    // dentro de la aplicación.
-
-    const locales =
-        getData(
-            "expedientes",
-            []
-        );
-
-
-    const mapa =
-        new Map();
-
-
-    [
-        ...ejemplos,
-        ...locales
-    ].forEach(
-        expediente => {
-
-            const numero =
-                expediente.numero ||
-                expediente.expediente;
-
-            if (!numero) {
-                return;
-            }
-
-            mapa.set(
-                String(numero).toLowerCase(),
-                {
-                    ...expediente,
-                    numero
-                }
-            );
-
-        }
-    );
-
-
-    expedientesReferencia =
-        Array.from(
-            mapa.values()
-        );
-
+  expedientesReferencia = Array.from(mapa.values());
 }
-
 
 // ============================================================
 // ABRIR FORMULARIO
 // ============================================================
 
 export async function openAmparoForm(amparoId = null) {
+  await loadExpedientesReference();
 
-    await loadExpedientesReference();
+  const amparosActuales = getData("amparos", []);
+  const amparoEdicion = amparoId
+    ? amparosActuales.find((item) => String(item.id) === String(amparoId))
+    : null;
 
-    const amparosActuales = getData("amparos", []);
-    const amparoEdicion = amparoId ? amparosActuales.find(item => String(item.id) === String(amparoId)) : null;
-
-    showModal(`
+  showModal(`
 
         <div class="amparo-form-shell">
 
@@ -588,35 +512,38 @@ export async function openAmparoForm(amparoId = null) {
 
     `);
 
+  if (amparoEdicion) {
+    fillAmparoForm(amparoEdicion);
+  } else {
+    setCurrentDateTime();
+  }
 
-    if (amparoEdicion) {
-        fillAmparoForm(amparoEdicion);
-    } else {
-        setCurrentDateTime();
-    }
-
-    setupExpedienteLookup();
-    setupCancel();
-    setupSubmit(amparoEdicion);
-
+  setupExpedienteLookup();
+  setupCancel();
+  setupSubmit(amparoEdicion);
 }
-
 
 // ============================================================
 // PRECARGAR AMPARO PARA EDICIÓN
 // ============================================================
 function fillAmparoForm(amparo) {
-    const valores = {
-        ampDia: amparo.dia || "", ampHora: amparo.hora || "", ampExp: amparo.expediente || "",
-        ampPromueve: amparo.promovente || "", ampJuzgado: amparo.juzgado || "", ampOficio: amparo.oficio || "",
-        ampEstado: amparo.estado || "Recibido", ampActoReclamado: amparo.actoReclamado || "",
-        ampAcciones: amparo.acciones || "", ampObservaciones: amparo.observaciones || ""
-    };
-    Object.entries(valores).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (element) element.value = value;
-    });
-    buscarExpediente();
+  const valores = {
+    ampDia: amparo.dia || "",
+    ampHora: amparo.hora || "",
+    ampExp: amparo.expediente || "",
+    ampPromueve: amparo.promovente || "",
+    ampJuzgado: amparo.juzgado || "",
+    ampOficio: amparo.oficio || "",
+    ampEstado: amparo.estado || "Recibido",
+    ampActoReclamado: amparo.actoReclamado || "",
+    ampAcciones: amparo.acciones || "",
+    ampObservaciones: amparo.observaciones || "",
+  };
+  Object.entries(valores).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.value = value;
+  });
+  buscarExpediente();
 }
 
 // ============================================================
@@ -624,224 +551,97 @@ function fillAmparoForm(amparo) {
 // ============================================================
 
 function setCurrentDateTime() {
+  const now = new Date();
 
-    const now =
-        new Date();
+  const year = now.getFullYear();
 
+  const month = String(now.getMonth() + 1).padStart(2, "0");
 
-    const year =
-        now.getFullYear();
+  const day = String(now.getDate()).padStart(2, "0");
 
+  const hours = String(now.getHours()).padStart(2, "0");
 
-    const month =
-        String(
-            now.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
+  const minutes = String(now.getMinutes()).padStart(2, "0");
 
+  const dateInput = document.getElementById("ampDia");
 
-    const day =
-        String(
-            now.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
+  const timeInput = document.getElementById("ampHora");
 
+  if (dateInput) {
+    dateInput.value = `${year}-${month}-${day}`;
+  }
 
-    const hours =
-        String(
-            now.getHours()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const minutes =
-        String(
-            now.getMinutes()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const dateInput =
-        document.getElementById(
-            "ampDia"
-        );
-
-
-    const timeInput =
-        document.getElementById(
-            "ampHora"
-        );
-
-
-    if (dateInput) {
-
-        dateInput.value =
-            `${year}-${month}-${day}`;
-
-    }
-
-
-    if (timeInput) {
-
-        timeInput.value =
-            `${hours}:${minutes}`;
-
-    }
-
+  if (timeInput) {
+    timeInput.value = `${hours}:${minutes}`;
+  }
 }
-
 
 // ============================================================
 // BUSCAR EXPEDIENTE
 // ============================================================
 
 function setupExpedienteLookup() {
+  const input = document.getElementById("ampExp");
 
-    const input =
-        document.getElementById(
-            "ampExp"
-        );
+  if (!input) {
+    return;
+  }
 
+  input.addEventListener("blur", buscarExpediente);
 
-    if (!input) {
-        return;
-    }
-
-
-    input.addEventListener(
-        "blur",
-        buscarExpediente
-    );
-
-
-    input.addEventListener(
-        "change",
-        buscarExpediente
-    );
-
+  input.addEventListener("change", buscarExpediente);
 }
-
 
 function buscarExpediente() {
+  const numero = document.getElementById("ampExp")?.value.trim();
 
-    const numero =
-        document
-            .getElementById(
-                "ampExp"
-            )
-            ?.value
-            .trim();
+  if (!numero) {
+    hideExpedienteInfo();
 
+    return;
+  }
 
-    if (!numero) {
+  const expediente = expedientesReferencia.find(
+    (item) => String(item.numero).toLowerCase() === numero.toLowerCase(),
+  );
 
-        hideExpedienteInfo();
+  if (!expediente) {
+    renderExpedienteNotFound();
 
-        return;
+    return;
+  }
 
-    }
-
-
-    const expediente =
-        expedientesReferencia.find(
-            item =>
-                String(
-                    item.numero
-                )
-                .toLowerCase()
-                ===
-                numero.toLowerCase()
-        );
-
-
-    if (!expediente) {
-
-        renderExpedienteNotFound();
-
-        return;
-
-    }
-
-
-    completarDatosExpediente(
-        expediente
-    );
-
+  completarDatosExpediente(expediente);
 }
-
 
 // ============================================================
 // AUTOLLENADO
 // ============================================================
 
-function completarDatosExpediente(
-    expediente
-) {
+function completarDatosExpediente(expediente) {
+  const promovente = document.getElementById("ampPromueve");
 
-    const promovente =
-        document.getElementById(
-            "ampPromueve"
-        );
+  const oficio = document.getElementById("ampOficio");
 
+  if (promovente && !promovente.value.trim()) {
+    promovente.value = expediente.promoventeSugerido || "";
+  }
 
-    const oficio =
-        document.getElementById(
-            "ampOficio"
-        );
+  if (oficio && !oficio.value.trim()) {
+    oficio.value = expediente.ultimoOficio || "";
+  }
 
+  const container = document.getElementById("ampExpedienteInfo");
 
-    if (
-        promovente &&
-        !promovente.value.trim()
-    ) {
+  if (!container) {
+    return;
+  }
 
-        promovente.value =
-            expediente.promoventeSugerido ||
-            "";
+  container.hidden = false;
 
-    }
+  container.className = "amparo-expediente-info success";
 
-
-    if (
-        oficio &&
-        !oficio.value.trim()
-    ) {
-
-        oficio.value =
-            expediente.ultimoOficio ||
-            "";
-
-    }
-
-
-    const container =
-        document.getElementById(
-            "ampExpedienteInfo"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    container.hidden =
-        false;
-
-
-    container.className =
-        "amparo-expediente-info success";
-
-
-    container.innerHTML = `
+  container.innerHTML = `
 
         <div class="amparo-expediente-status">
 
@@ -862,10 +662,7 @@ function completarDatosExpediente(
                 </span>
 
                 <strong>
-                    ${escapeHTML(
-                        expediente.actor ||
-                        "—"
-                    )}
+                    ${escapeHTML(expediente.actor || "—")}
                 </strong>
 
             </div>
@@ -878,10 +675,7 @@ function completarDatosExpediente(
                 </span>
 
                 <strong>
-                    ${escapeHTML(
-                        expediente.demandado ||
-                        "—"
-                    )}
+                    ${escapeHTML(expediente.demandado || "—")}
                 </strong>
 
             </div>
@@ -894,10 +688,7 @@ function completarDatosExpediente(
                 </span>
 
                 <strong>
-                    ${escapeHTML(
-                        expediente.estado ||
-                        "—"
-                    )}
+                    ${escapeHTML(expediente.estado || "—")}
                 </strong>
 
             </div>
@@ -910,10 +701,7 @@ function completarDatosExpediente(
                 </span>
 
                 <strong>
-                    ${escapeHTML(
-                        expediente.ubicacion ||
-                        "—"
-                    )}
+                    ${escapeHTML(expediente.ubicacion || "—")}
                 </strong>
 
             </div>
@@ -922,32 +710,20 @@ function completarDatosExpediente(
         </div>
 
     `;
-
 }
 
-
 function renderExpedienteNotFound() {
+  const container = document.getElementById("ampExpedienteInfo");
 
-    const container =
-        document.getElementById(
-            "ampExpedienteInfo"
-        );
+  if (!container) {
+    return;
+  }
 
+  container.hidden = false;
 
-    if (!container) {
-        return;
-    }
+  container.className = "amparo-expediente-info warning";
 
-
-    container.hidden =
-        false;
-
-
-    container.className =
-        "amparo-expediente-info warning";
-
-
-    container.innerHTML = `
+  container.innerHTML = `
 
         <div class="amparo-expediente-status">
 
@@ -958,224 +734,123 @@ function renderExpedienteNotFound() {
         </div>
 
     `;
-
 }
-
 
 function hideExpedienteInfo() {
+  const container = document.getElementById("ampExpedienteInfo");
 
-    const container =
-        document.getElementById(
-            "ampExpedienteInfo"
-        );
-
-
-    if (container) {
-
-        container.hidden = true;
-
-    }
-
+  if (container) {
+    container.hidden = true;
+  }
 }
-
 
 // ============================================================
 // CANCELAR
 // ============================================================
 
 function setupCancel() {
-
-    document
-        .getElementById(
-            "cancelAmparoBtn"
-        )
-        ?.addEventListener(
-            "click",
-            closeForm
-        );
-
+  document
+    .getElementById("cancelAmparoBtn")
+    ?.addEventListener("click", closeForm);
 }
-
 
 // ============================================================
 // SUBMIT
 // ============================================================
 
 function setupSubmit(amparoEdicion = null) {
-
-    document
-        .getElementById(
-            "amparoFormElement"
-        )
-        ?.addEventListener(
-            "submit",
-            event => saveAmparo(event, amparoEdicion)
-        );
-
+  document
+    .getElementById("amparoFormElement")
+    ?.addEventListener("submit", (event) => saveAmparo(event, amparoEdicion));
 }
-
 
 // ============================================================
 // GUARDAR AMPARO
 // ============================================================
 
-function saveAmparo(
-    event,
-    amparoEdicion = null
-) {
+function saveAmparo(event, amparoEdicion = null) {
+  event.preventDefault();
 
-    event.preventDefault();
+  const amparos = getData("amparos", []);
 
+  const nuevoAmparo = {
+    id: amparoEdicion?.id || createId(),
 
-    const amparos =
-        getData(
-            "amparos",
-            []
-        );
+    dia: document.getElementById("ampDia").value,
 
+    hora: document.getElementById("ampHora").value,
 
-    const nuevoAmparo = {
+    expediente: document.getElementById("ampExp").value.trim(),
 
-        id:
-            amparoEdicion?.id || createId(),
+    promovente: document.getElementById("ampPromueve").value.trim(),
 
-        dia:
-            document
-                .getElementById(
-                    "ampDia"
-                )
-                .value,
+    juzgado: document.getElementById("ampJuzgado").value.trim(),
 
-        hora:
-            document
-                .getElementById(
-                    "ampHora"
-                )
-                .value,
+    oficio: document.getElementById("ampOficio").value.trim(),
 
-        expediente:
-            document
-                .getElementById(
-                    "ampExp"
-                )
-                .value
-                .trim(),
+    actoReclamado: document.getElementById("ampActoReclamado").value.trim(),
 
-        promovente:
-            document
-                .getElementById(
-                    "ampPromueve"
-                )
-                .value
-                .trim(),
+    acciones: document.getElementById("ampAcciones").value.trim(),
 
-        juzgado:
-            document
-                .getElementById(
-                    "ampJuzgado"
-                )
-                .value
-                .trim(),
+    observaciones: document.getElementById("ampObservaciones").value.trim(),
 
-        oficio:
-            document
-                .getElementById(
-                    "ampOficio"
-                )
-                .value
-                .trim(),
+    estado: document.getElementById("ampEstado").value,
 
-        actoReclamado:
-            document
-                .getElementById(
-                    "ampActoReclamado"
-                )
-                .value
-                .trim(),
+    creadoEn: amparoEdicion?.creadoEn || new Date().toISOString(),
 
-        acciones:
-            document
-                .getElementById(
-                    "ampAcciones"
-                )
-                .value
-                .trim(),
+    actualizadoEn: amparoEdicion ? new Date().toISOString() : undefined,
+  };
 
-        observaciones:
-            document
-                .getElementById(
-                    "ampObservaciones"
-                )
-                .value
-                .trim(),
+  if (amparoEdicion) {
+    const index = amparos.findIndex(
+      (item) => String(item.id) === String(amparoEdicion.id),
+    );
+    if (index >= 0) {
+      const campos = [
+        ["Fecha", "dia"],
+        ["Hora", "hora"],
+        ["Expediente", "expediente"],
+        ["Promovente", "promovente"],
+        ["No. juzgado", "juzgado"],
+        ["No. oficio", "oficio"],
+        ["Acto reclamado", "actoReclamado"],
+        ["Acciones", "acciones"],
+        ["Observaciones", "observaciones"],
+        ["Estado", "estado"],
+      ];
+      const cambios = campos
+        .filter(
+          ([, key]) =>
+            String(amparoEdicion[key] || "") !== String(nuevoAmparo[key] || ""),
+        )
+        .map(([label]) => label);
 
-        estado:
-            document
-                .getElementById(
-                    "ampEstado"
-                )
-                .value,
-
-        creadoEn:
-            amparoEdicion?.creadoEn || new Date().toISOString(),
-
-        actualizadoEn:
-            amparoEdicion ? new Date().toISOString() : undefined
-
-    };
-
-
-    if (amparoEdicion) {
-        const index = amparos.findIndex(item => String(item.id) === String(amparoEdicion.id));
-        if (index >= 0) {
-            const campos = [
-                ["Fecha", "dia"], ["Hora", "hora"], ["Expediente", "expediente"],
-                ["Promovente", "promovente"], ["No. juzgado", "juzgado"], ["No. oficio", "oficio"],
-                ["Acto reclamado", "actoReclamado"], ["Acciones", "acciones"],
-                ["Observaciones", "observaciones"], ["Estado", "estado"]
-            ];
-            const cambios = campos
-                .filter(([, key]) => String(amparoEdicion[key] || "") !== String(nuevoAmparo[key] || ""))
-                .map(([label]) => label);
-
-            if (cambios.length) {
-                const historial = getData("amparoHistorial", []);
-                historial.unshift({
-                    id: createId(),
-                    amparoId: nuevoAmparo.id,
-                    expediente: nuevoAmparo.expediente,
-                    fecha: nuevoAmparo.actualizadoEn,
-                    detalle: `Campos actualizados: ${cambios.join(", ")}.`
-                });
-                saveData("amparoHistorial", historial);
-            }
-            amparos[index] = nuevoAmparo;
-        }
-    } else {
-        amparos.unshift(nuevoAmparo);
+      if (cambios.length) {
+        const historial = getData("amparoHistorial", []);
+        historial.unshift({
+          id: createId(),
+          amparoId: nuevoAmparo.id,
+          expediente: nuevoAmparo.expediente,
+          fecha: nuevoAmparo.actualizadoEn,
+          detalle: `Campos actualizados: ${cambios.join(", ")}.`,
+        });
+        saveData("amparoHistorial", historial);
+      }
+      amparos[index] = nuevoAmparo;
     }
+  } else {
+    amparos.unshift(nuevoAmparo);
+  }
 
-    saveData("amparos", amparos);
+  saveData("amparos", amparos);
 
-    closeForm();
+  closeForm();
 
+  if (window.renderAmparos) {
+    window.renderAmparos();
+  }
 
-    if (
-        window.renderAmparos
-    ) {
-
-        window.renderAmparos();
-
-    }
-
-
-    if (
-        window.initDashboardPage
-    ) {
-
-        window.initDashboardPage();
-
-    }
-
+  if (window.initDashboardPage) {
+    window.initDashboardPage();
+  }
 }
-

@@ -107,15 +107,7 @@ ${escapeHTML(exp.demandado)}
 
 
 
-<td>
 
-<span class="badge badge-gray">
-
-${escapeHTML(exp.clasificacion)}
-
-</span>
-
-</td>
 
 
 
@@ -134,12 +126,6 @@ ${escapeHTML(exp.estado)}
 
 
 
-
-<td>
-
-${escapeHTML(exp.ubicacion)}
-
-</td>
 
 
 
@@ -188,7 +174,30 @@ export function viewExpediente(numero) {
     return;
   }
 
+  const documentos = getExpedienteDocuments(numero);
   const movimientos = getExpedienteHistory(numero);
+
+  const documentosHTML = documentos
+    .map(
+      (doc) => `
+        <div class="expediente-doc-item">
+          <div class="expediente-history-icon">
+            <i class="fa-solid ${doc.icono}"></i>
+          </div>
+          <div class="expediente-doc-content">
+            <div class="expediente-history-heading">
+              <strong>${escapeHTML(doc.titulo)}</strong>
+              <span class="expediente-doc-type">${escapeHTML(doc.tipo)}</span>
+            </div>
+            <p>${escapeHTML(doc.detalle || "—")}</p>
+            <small>
+              ${escapeHTML(formatExpedienteDateTime(doc.fecha))}${doc.estado ? ` · ${escapeHTML(doc.estado)}` : ""}
+            </small>
+          </div>
+        </div>
+      `,
+    )
+    .join("");
 
   const historicoHTML = movimientos
     .map(
@@ -220,7 +229,7 @@ export function viewExpediente(numero) {
       <header class="expediente-detail-header">
         <span class="expediente-detail-eyebrow">EXPEDIENTES</span>
         <h2>Expediente ${escapeHTML(numero)}</h2>
-        <p>Información general e histórico de movimientos vinculados.</p>
+        <p>Información general, documentos e histórico de movimientos vinculados.</p>
       </header>
 
       <div class="expediente-detail-content">
@@ -228,11 +237,10 @@ export function viewExpediente(numero) {
           <div class="expediente-detail-section-title">
             <div>
               <h3>Información del expediente</h3>
-              <p>Este expediente se originó desde una demanda y no puede registrarse de forma independiente.</p>
+              <p>Este expediente se originó desde una demanda.</p>
             </div>
             <div class="expediente-detail-actions">
               <span class="badge badge-blue">${escapeHTML(expediente.estado || "Registrado")}</span>
-              <button type="button" class="table-action" id="editExpedienteBtn">Editar expediente</button>
             </div>
           </div>
 
@@ -250,7 +258,20 @@ export function viewExpediente(numero) {
         <section class="expediente-detail-section">
           <div class="expediente-detail-section-title">
             <div>
-              <h3>Histórico del expediente</h3>
+              <h3>Documentos</h3>
+              <p>${documentos.length} documento(s) registrados con el folio de este expediente.</p>
+            </div>
+          </div>
+
+          <div class="expediente-doc-list">
+            ${documentosHTML || '<p class="expediente-history-empty">No hay documentos vinculados a este expediente.</p>'}
+          </div>
+        </section>
+
+        <section class="expediente-detail-section">
+          <div class="expediente-detail-section-title">
+            <div>
+              <h3>Histórico de actualizaciones</h3>
               <p>Movimientos registrados con el número de este expediente.</p>
             </div>
           </div>
@@ -264,10 +285,112 @@ export function viewExpediente(numero) {
   `;
 
   document.getElementById("modal")?.classList.add("show");
+}
 
-  document.getElementById("editExpedienteBtn")?.addEventListener("click", () => {
-    openEditExpediente(numero);
+// Todos los documentos vinculados al folio del expediente
+function getExpedienteDocuments(numero) {
+  const normalizado = normalizeText(numero);
+  const coincide = (valor) => normalizeText(valor || "") === normalizado;
+  const documentos = [];
+
+  getData("demandas", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      documentos.push({
+        tipo: "Demanda",
+        icono: "fa-scale-balanced",
+        titulo: `Demanda ${item.expediente}`,
+        detalle: [
+          item.actor && `Actor: ${item.actor}`,
+          item.demandado && `Demandado: ${item.demandado}`,
+          item.actos && `Actos: ${item.actos}`,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        fecha: item.creadoEn || item.fecha || "",
+        estado: item.estado,
+      });
+    });
+
+  const amparos = getData("amparos", []).filter((item) =>
+    coincide(item.expediente),
+  );
+  const amparoIds = new Set(amparos.map((item) => String(item.id)));
+
+  amparos.forEach((item) => {
+    documentos.push({
+      tipo: "Amparo",
+      icono: "fa-shield-halved",
+      titulo: `Amparo${item.juzgado ? ` · Juzgado ${item.juzgado}` : ""}`,
+      detalle: [
+        item.promovente && `Promovente: ${item.promovente}`,
+        item.oficio && `Oficio: ${item.oficio}`,
+        item.actoReclamado && `Acto reclamado: ${item.actoReclamado}`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      fecha: item.creadoEn || buildExpedienteDateTime(item.dia, item.hora),
+      estado: item.estado,
+    });
   });
+
+  getData("oficios", [])
+    .filter(
+      (item) =>
+        coincide(item.expediente) || amparoIds.has(String(item.amparoId || "")),
+    )
+    .forEach((item) => {
+      documentos.push({
+        tipo: "Oficio",
+        icono: "fa-file-lines",
+        titulo: `Oficio ${item.numero || item.numeroOficio || "sin número"}`,
+        detalle: [
+          item.procedencia && `Procedencia: ${item.procedencia}`,
+          item.asunto,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        fecha: item.creadoEn || item.fechaRecepcion || item.fecha || "",
+        estado: item.estado,
+      });
+    });
+
+  getData("promociones", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      documentos.push({
+        tipo: "Promoción",
+        icono: "fa-file-signature",
+        titulo: `Promoción${item.tipo ? ` · ${item.tipo}` : ""}`,
+        detalle: [item.oficio && `Oficio: ${item.oficio}`, item.descripcion]
+          .filter(Boolean)
+          .join(" · "),
+        fecha: item.creadoEn || item.fecha || "",
+        estado: item.estado,
+      });
+    });
+
+  getData("exhortos", [])
+    .filter((item) => coincide(item.expedienteVinculado))
+    .forEach((item) => {
+      documentos.push({
+        tipo: "Exhorto",
+        icono: "fa-file-import",
+        titulo: `Exhorto ${item.numero || "sin número"}`,
+        detalle: [
+          item.autoridad && `Autoridad: ${item.autoridad}`,
+          item.requerimiento,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        fecha: item.creadoEn || item.fecha || "",
+        estado: item.estado,
+      });
+    });
+
+  return documentos.sort(
+    (a, b) => getExpedienteTime(b.fecha) - getExpedienteTime(a.fecha),
+  );
 }
 
 function getExpedienteHistory(numero) {
@@ -305,7 +428,11 @@ function getExpedienteHistory(numero) {
       movimientos.push({
         fecha: item.creadoEn || item.fecha || "",
         titulo: "Promoción registrada",
-        detalle: item.descripcion || item.observaciones || item.numero || "Promoción vinculada al expediente.",
+        detalle:
+          item.descripcion ||
+          item.observaciones ||
+          item.numero ||
+          "Promoción vinculada al expediente.",
         icono: "fa-file-signature",
       });
     });
@@ -316,7 +443,9 @@ function getExpedienteHistory(numero) {
       movimientos.push({
         fecha: item.creadoEn || item.fechaRecepcion || item.fecha || "",
         titulo: `Oficio ${item.numero || "registrado"}`,
-        detalle: item.asunto || `Oficio vinculado al expediente · ${item.estado || "Registrado"}`,
+        detalle:
+          item.asunto ||
+          `Oficio vinculado al expediente · ${item.estado || "Registrado"}`,
         icono: "fa-file-lines",
       });
     });
@@ -327,7 +456,8 @@ function getExpedienteHistory(numero) {
       movimientos.push({
         fecha: item.fecha || "",
         titulo: "Amparo actualizado",
-        detalle: item.detalle || "Se actualizaron datos de un amparo vinculado.",
+        detalle:
+          item.detalle || "Se actualizaron datos de un amparo vinculado.",
         icono: "fa-pen-to-square",
       });
     });
@@ -340,6 +470,18 @@ function getExpedienteHistory(numero) {
         titulo: "Expediente actualizado",
         detalle: item.detalle || "Se actualizaron datos del expediente.",
         icono: "fa-pen-to-square",
+      });
+    });
+
+  getData("exhortos", [])
+    .filter((item) => coincide(item.expedienteVinculado))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.creadoEn || item.fecha || "",
+        titulo: `Exhorto ${item.numero || "registrado"}`,
+        detalle:
+          item.requerimiento || "Exhorto interno vinculado al expediente.",
+        icono: "fa-file-import",
       });
     });
 
@@ -396,13 +538,14 @@ export function searchExpediente(numero) {
   );
 }
 
-
 // ============================================================
 // EDITAR EXPEDIENTE EXISTENTE
 // ============================================================
 function openEditExpediente(numero) {
   expedientes = getData("expedientes", []);
-  const expediente = expedientes.find((item) => String(item.numero) === String(numero));
+  const expediente = expedientes.find(
+    (item) => String(item.numero) === String(numero),
+  );
   if (!expediente) return;
 
   const modal = document.getElementById("modalContent");
@@ -431,14 +574,20 @@ function openEditExpediente(numero) {
       </form>
     </div>`;
 
-  document.getElementById("cancelEditExpediente")?.addEventListener("click", () => viewExpediente(numero));
-  document.getElementById("editExpedienteForm")?.addEventListener("submit", (event) => saveEditExpediente(event, numero));
+  document
+    .getElementById("cancelEditExpediente")
+    ?.addEventListener("click", () => viewExpediente(numero));
+  document
+    .getElementById("editExpedienteForm")
+    ?.addEventListener("submit", (event) => saveEditExpediente(event, numero));
 }
 
 function saveEditExpediente(event, numero) {
   event.preventDefault();
   let lista = getData("expedientes", []);
-  const index = lista.findIndex((item) => String(item.numero) === String(numero));
+  const index = lista.findIndex(
+    (item) => String(item.numero) === String(numero),
+  );
   if (index < 0) return;
 
   const anterior = { ...lista[index] };
@@ -453,14 +602,34 @@ function saveEditExpediente(event, numero) {
     actualizadoEn: new Date().toISOString(),
   };
 
-  const campos = [["Actor","actor"],["Demandado","demandado"],["Acto demandado","actoDemandado"],["Clasificación","clasificacion"],["Estado","estado"],["Ubicación","ubicacion"]];
-  const cambios = campos.filter(([,key]) => String(anterior[key] || "") !== String(actualizado[key] || "")).map(([label]) => label);
-  if (!cambios.length) { viewExpediente(numero); return; }
+  const campos = [
+    ["Actor", "actor"],
+    ["Demandado", "demandado"],
+    ["Acto demandado", "actoDemandado"],
+    ["Clasificación", "clasificacion"],
+    ["Estado", "estado"],
+    ["Ubicación", "ubicacion"],
+  ];
+  const cambios = campos
+    .filter(
+      ([, key]) =>
+        String(anterior[key] || "") !== String(actualizado[key] || ""),
+    )
+    .map(([label]) => label);
+  if (!cambios.length) {
+    viewExpediente(numero);
+    return;
+  }
 
   lista[index] = actualizado;
   saveData("expedientes", lista);
   const historial = getData("expedienteHistorial", []);
-  historial.unshift({ id: createId(), expediente: numero, fecha: actualizado.actualizadoEn, detalle: `Campos actualizados: ${cambios.join(", ")}.` });
+  historial.unshift({
+    id: createId(),
+    expediente: numero,
+    fecha: actualizado.actualizadoEn,
+    detalle: `Campos actualizados: ${cambios.join(", ")}.`,
+  });
   saveData("expedienteHistorial", historial);
   renderExpedientes();
   viewExpediente(numero);
