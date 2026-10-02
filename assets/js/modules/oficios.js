@@ -3,9 +3,6 @@ import { escapeHTML, escapeJS, formatDate, createId } from "../utils.js";
 
 let oficios = [];
 
-// Usuario conectado en la sesión activa
-const USUARIO_ACTIVO = "Lic. Juan Pérez (Administración)";
-
 // =====================================================
 // INICIALIZACIÓN
 // =====================================================
@@ -58,7 +55,7 @@ export function renderOficios() {
                 </td>
                 <td>
                     <span class="user-badge">
-                        ${esRecibido ? escapeHTML(item.recibidoPor || USUARIO_ACTIVO) : '<em style="color:#888;">—</em>'}
+                        ${esRecibido ? escapeHTML(item.recibidoPor || "—") : '<em style="color:#888;">—</em>'}
                     </span>
                 </td>
                 <td>
@@ -81,11 +78,17 @@ export function onEstadoOficioChange(selectElement) {
   if (!contenedor) return;
 
   if (selectElement.value === "Recibido") {
+    const valorActual = document.getElementById("recibidoPorOficio")?.value || "";
     contenedor.innerHTML = `
-      <div class="recepcion-subtext">
-        <span class="label-recibido">Recibido por:</span>
-        <span class="value-recibido">${escapeHTML(USUARIO_ACTIVO)}</span>
-      </div>
+      <label for="recibidoPorOficio" style="display:block;margin-bottom:6px;font-weight:600;">Recibido por</label>
+      <input
+        id="recibidoPorOficio"
+        type="text"
+        required
+        value="${escapeHTML(valorActual)}"
+        placeholder="Escribe el nombre de quien recibe"
+        autocomplete="off"
+      >
     `;
     contenedor.style.display = "block";
   } else {
@@ -170,6 +173,12 @@ function saveOficio(event) {
 
   const estado = document.getElementById("estadoOficio")?.value || "Pendiente";
   const esRecibido = estado === "Recibido";
+  const recibidoPor = document.getElementById("recibidoPorOficio")?.value.trim() || "";
+
+  if (esRecibido && !recibidoPor) {
+    document.getElementById("recibidoPorOficio")?.focus();
+    return;
+  }
 
   const nuevoOficio = {
     id: createId(),
@@ -179,7 +188,7 @@ function saveOficio(event) {
     procedencia: document.getElementById("procedenciaOficio")?.value.trim() || "",
     asunto: document.getElementById("asuntoOficio")?.value.trim() || "",
     estado: estado,
-    recibidoPor: esRecibido ? USUARIO_ACTIVO : "",
+    recibidoPor: esRecibido ? recibidoPor : "",
     fechaRecepcion: esRecibido ? new Date().toISOString() : null,
     creadoEn: new Date().toISOString()
   };
@@ -248,7 +257,7 @@ export function viewOficio(id) {
                 ${esRecibido ? `
                 <div class="detail-item full">
                     <span>Recibido por</span>
-                    <strong>${escapeHTML(oficio.recibidoPor || USUARIO_ACTIVO)}</strong>
+                    <strong>${escapeHTML(oficio.recibidoPor || "—")}</strong>
                 </div>
                 ` : ""}
             </div>

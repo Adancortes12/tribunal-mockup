@@ -32,8 +32,6 @@ import { initOficios } from "./modules/oficios.js";
 
 // Forms
 
-import { initExpedienteForm } from "./forms/expedienteForm.js";
-
 import { initDemandaForm } from "./forms/demandaForm.js";
 
 import { initAmparoForm } from "./forms/amparoForm.js";
@@ -92,8 +90,6 @@ function initModules() {
 
   initOficios();
 
-  initExpedienteForm();
-
   initDemandaForm();
 
   initAmparoForm();
@@ -120,11 +116,6 @@ function setupEvents() {
     const action = button.dataset.action;
 
     switch (action) {
-      case "new-expediente":
-        window.openNewExpediente();
-
-        break;
-
       case "new-demanda":
         window.openDemandaForm();
 

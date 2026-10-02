@@ -705,3 +705,4 @@
     }
 
 }
+.historico-send-buttons{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.historico-send-btn.secondary{background:#fff;color:#1768cf;border:1px solid #b9cde3}

@@ -70,18 +70,18 @@ async function loadCatalogs() {
             catalogoEntes = localEntes;
         }
 
-        // 2. Cargar Acciones Reclamadas
-        const accionesURL = new URL(
-            "../../data/acciones-reclamadas.json",
-            import.meta.url
-        );
-        const accionesResponse = await fetch(accionesURL);
-
-        if (accionesResponse.ok) {
-            const data = await accionesResponse.json();
-            catalogoAcciones = Array.isArray(data)
-                ? data
-                : data.acciones || [];
+        // 2. Cargar Actos Demandados: primero catálogo administrable en localStorage.
+        const actosLocales = getData("actosDemandados", null);
+        if (actosLocales !== null) {
+            catalogoAcciones = actosLocales;
+        } else {
+            const accionesURL = new URL("../../data/acciones-reclamadas.json", import.meta.url);
+            const accionesResponse = await fetch(accionesURL);
+            if (accionesResponse.ok) {
+                const data = await accionesResponse.json();
+                catalogoAcciones = Array.isArray(data) ? data : data.acciones || [];
+                saveData("actosDemandados", catalogoAcciones);
+            }
         }
 
     }
@@ -176,26 +176,6 @@ export async function openDemandaForm() {
 
 
                         <div class="demanda-fields-grid">
-
-
-                            <div class="demanda-field">
-
-                                <label for="demExp">
-
-                                    Número de expediente
-
-                                    <span>*</span>
-
-                                </label>
-
-                                <input
-                                    id="demExp"
-                                    type="text"
-                                    placeholder="Ej. 124/2026"
-                                    required
-                                >
-
-                            </div>
 
 
                             <div class="demanda-field">
@@ -609,7 +589,7 @@ export async function openDemandaForm() {
                             <div>
 
                                 <h3>
-                                    Acción reclamada
+                                    Acto demandado
                                 </h3>
 
                                 <p>
@@ -878,7 +858,7 @@ function renderAccionesCheckboxes() {
                 <div>
 
                     <strong>
-                        Catálogo de acciones pendiente
+                        Catálogo de actos demandados pendiente
                     </strong>
 
                     <p>
@@ -1448,7 +1428,7 @@ function saveDemanda(
     ) {
 
         alert(
-            "Selecciona al menos una acción reclamada."
+            "Selecciona al menos una acto demandado."
         );
 
         return;
@@ -1463,18 +1443,32 @@ function saveDemanda(
         );
 
 
+    // La Demanda origina el Expediente: el folio se genera aquí y
+    // se reutiliza tanto en la demanda como en el expediente creado.
+    const expedientes = getData("expedientes", []);
+    const anioActual = new Date().getFullYear();
+    const patronExpediente = new RegExp(`^EXP-${anioActual}-(\\d+)$`, "i");
+
+    const ultimoConsecutivo = expedientes.reduce((maximo, item) => {
+        const numero = String(item.numero || item.expediente || "").trim();
+        const coincidencia = numero.match(patronExpediente);
+
+        if (!coincidencia) {
+            return maximo;
+        }
+
+        return Math.max(maximo, Number(coincidencia[1]) || 0);
+    }, 0);
+
+    const numeroExpediente = `EXP-${anioActual}-${String(ultimoConsecutivo + 1).padStart(3, "0")}`;
+
     const nuevaDemanda = {
 
         id:
             createId(),
 
         expediente:
-            document
-                .getElementById(
-                    "demExp"
-                )
-                .value
-                .trim(),
+            numeroExpediente,
 
         fecha:
             document
@@ -1560,6 +1554,29 @@ function saveDemanda(
         "demandas",
         demandas
     );
+
+
+    // La demanda es el origen del expediente. Conservamos la clave
+    // `expedientes` para que Amparos y los demás módulos sigan
+    // trabajando con la misma fuente de referencia.
+    expedientes.unshift({
+        id: createId(),
+        numero: nuevaDemanda.expediente,
+        expediente: nuevaDemanda.expediente,
+        fecha: nuevaDemanda.fecha,
+        fechaRecepcion: nuevaDemanda.fecha,
+        actor: nuevaDemanda.actor,
+        demandado: nuevaDemanda.demandado,
+        actoDemandado: nuevaDemanda.actos || nuevaDemanda.accion || "",
+        estado: nuevaDemanda.estado,
+        clasificacion: "",
+        ubicacion: "",
+        demandaId: nuevaDemanda.id,
+        origen: "demanda",
+        creadoEn: nuevaDemanda.creadoEn
+    });
+
+    saveData("expedientes", expedientes);
 
 
     closeForm();

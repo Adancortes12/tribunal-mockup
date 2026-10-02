@@ -21,8 +21,6 @@ let expedientes = [];
 export function initExpedientes() {
   expedientes = getData("expedientes", []);
 
-  window.openNewExpediente = openNewExpediente;
-
   window.viewExpediente = viewExpediente;
 
   window.renderExpedientes = renderExpedientes;
@@ -178,10 +176,39 @@ Ver
 }
 
 // =====================================================
-// CREAR EXPEDIENTE
+// VER DETALLE
 // =====================================================
 
-export function openNewExpediente() {
+export function viewExpediente(numero) {
+  expedientes = getData("expedientes", []);
+
+  const expediente = expedientes.find((item) => item.numero === numero);
+
+  if (!expediente) {
+    return;
+  }
+
+  const movimientos = getExpedienteHistory(numero);
+
+  const historicoHTML = movimientos
+    .map(
+      (movimiento) => `
+        <div class="expediente-history-item">
+          <div class="expediente-history-icon">
+            <i class="fa-solid ${movimiento.icono}"></i>
+          </div>
+          <div class="expediente-history-content">
+            <div class="expediente-history-heading">
+              <strong>${escapeHTML(movimiento.titulo)}</strong>
+              <span>${escapeHTML(formatExpedienteDateTime(movimiento.fecha))}</span>
+            </div>
+            <p>${escapeHTML(movimiento.detalle || "—")}</p>
+          </div>
+        </div>
+      `,
+    )
+    .join("");
+
   const modal = document.getElementById("modalContent");
 
   if (!modal) {
@@ -189,448 +216,174 @@ export function openNewExpediente() {
   }
 
   modal.innerHTML = `
-
-
-<div class="form-header">
-
-
-<span>
-Expedientes
-</span>
-
-
-<h2>
-Nuevo expediente
-</h2>
-
-
-</div>
-
-
-
-
-
-<div class="form-body">
-
-
-<form id="expedienteForm">
-
-
-<div class="form-grid">
-
-
-
-<div class="field">
-
-<label>
-Número expediente
-</label>
-
-
-<input
-id="numeroExp"
-required
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Fecha recepción
-</label>
-
-
-<input
-
-type="date"
-
-id="fechaExp"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Actor
-</label>
-
-
-<input
-
-id="actorExp"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Demandado
-</label>
-
-
-<input
-
-id="demandadoExp"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Clasificación
-</label>
-
-
-<select id="clasificacionExp">
-
-
-<option>
-OCL - Educación
-</option>
-
-
-<option>
-OJC - Salud
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Estado
-</label>
-
-
-<select id="estadoExp">
-
-
-<option>
-Recibido
-</option>
-
-
-<option>
-En revisión
-</option>
-
-
-<option>
-En instrucción
-</option>
-
-
-<option>
-Concluido
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-<div class="field">
-
-
-<label>
-Ubicación
-</label>
-
-
-<select id="ubicacionExp">
-
-
-<option>
-Oficialía de Partes
-</option>
-
-
-<option>
-Secretaría de Acuerdos
-</option>
-
-
-<option>
-Archivo
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-<div class="form-actions">
-
-
-<button
-
-type="button"
-
-class="secondary-btn"
-
-onclick="closeModal()"
-
->
-
-Cancelar
-
-</button>
-
-
-
-
-
-<button
-
-class="primary-btn"
-
->
-
-Guardar
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-</form>
-
-
-
-</div>
-
-
-
-`;
-
-  document.getElementById("modal").classList.add("show");
-
-  document.getElementById("expedienteForm").addEventListener(
-    "submit",
-
-    saveExpediente,
+    <div class="expediente-detail-shell">
+      <header class="expediente-detail-header">
+        <span class="expediente-detail-eyebrow">EXPEDIENTES</span>
+        <h2>Expediente ${escapeHTML(numero)}</h2>
+        <p>Información general e histórico de movimientos vinculados.</p>
+      </header>
+
+      <div class="expediente-detail-content">
+        <section class="expediente-detail-section">
+          <div class="expediente-detail-section-title">
+            <div>
+              <h3>Información del expediente</h3>
+              <p>Este expediente se originó desde una demanda y no puede registrarse de forma independiente.</p>
+            </div>
+            <div class="expediente-detail-actions">
+              <span class="badge badge-blue">${escapeHTML(expediente.estado || "Registrado")}</span>
+              <button type="button" class="table-action" id="editExpedienteBtn">Editar expediente</button>
+            </div>
+          </div>
+
+          <div class="expediente-detail-grid">
+            ${expedienteDetailField("Actor", expediente.actor)}
+            ${expedienteDetailField("Demandado", expediente.demandado)}
+            ${expedienteDetailField("Acto demandado", expediente.actoDemandado || expediente.acciones || expediente.accionReclamada)}
+            ${expedienteDetailField("Fecha", formatDate(expediente.fecha))}
+            ${expedienteDetailField("Clasificación", expediente.clasificacion)}
+            ${expedienteDetailField("Ubicación", expediente.ubicacion)}
+            ${expedienteDetailField("Origen", expediente.origen === "demanda" ? "Generado por demanda" : expediente.origen)}
+          </div>
+        </section>
+
+        <section class="expediente-detail-section">
+          <div class="expediente-detail-section-title">
+            <div>
+              <h3>Histórico del expediente</h3>
+              <p>Movimientos registrados con el número de este expediente.</p>
+            </div>
+          </div>
+
+          <div class="expediente-history-list">
+            ${historicoHTML || '<p class="expediente-history-empty">No hay movimientos vinculados a este expediente.</p>'}
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("modal")?.classList.add("show");
+
+  document.getElementById("editExpedienteBtn")?.addEventListener("click", () => {
+    openEditExpediente(numero);
+  });
+}
+
+function getExpedienteHistory(numero) {
+  const normalizado = normalizeText(numero);
+  const coincide = (valor) => normalizeText(valor || "") === normalizado;
+  const movimientos = [];
+
+  getData("demandas", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.creadoEn || item.fecha || "",
+        titulo: "Demanda registrada",
+        detalle: "La demanda generó este expediente.",
+        icono: "fa-scale-balanced",
+      });
+    });
+
+  getData("amparos", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.creadoEn || buildExpedienteDateTime(item.dia, item.hora),
+        titulo: "Amparo registrado",
+        detalle: item.promovente
+          ? `Promovente: ${item.promovente}`
+          : `Estado: ${item.estado || "Recibido"}`,
+        icono: "fa-shield-halved",
+      });
+    });
+
+  getData("promociones", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.creadoEn || item.fecha || "",
+        titulo: "Promoción registrada",
+        detalle: item.descripcion || item.observaciones || item.numero || "Promoción vinculada al expediente.",
+        icono: "fa-file-signature",
+      });
+    });
+
+  getData("oficios", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.creadoEn || item.fechaRecepcion || item.fecha || "",
+        titulo: `Oficio ${item.numero || "registrado"}`,
+        detalle: item.asunto || `Oficio vinculado al expediente · ${item.estado || "Registrado"}`,
+        icono: "fa-file-lines",
+      });
+    });
+
+  getData("amparoHistorial", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.fecha || "",
+        titulo: "Amparo actualizado",
+        detalle: item.detalle || "Se actualizaron datos de un amparo vinculado.",
+        icono: "fa-pen-to-square",
+      });
+    });
+
+  getData("expedienteHistorial", [])
+    .filter((item) => coincide(item.expediente))
+    .forEach((item) => {
+      movimientos.push({
+        fecha: item.fecha || "",
+        titulo: "Expediente actualizado",
+        detalle: item.detalle || "Se actualizaron datos del expediente.",
+        icono: "fa-pen-to-square",
+      });
+    });
+
+  return movimientos.sort(
+    (a, b) => getExpedienteTime(b.fecha) - getExpedienteTime(a.fecha),
   );
 }
 
-function saveExpediente(event) {
-  event.preventDefault();
-
-  const expediente = {
-    id: createId(),
-
-    numero: document.getElementById("numeroExp").value,
-
-    fecha: document.getElementById("fechaExp").value,
-
-    actor: document.getElementById("actorExp").value,
-
-    demandado: document.getElementById("demandadoExp").value,
-
-    clasificacion: document.getElementById("clasificacionExp").value,
-
-    estado: document.getElementById("estadoExp").value,
-
-    ubicacion: document.getElementById("ubicacionExp").value,
-
-    creadoEn: new Date().toISOString(),
-  };
-
-  expedientes.unshift(expediente);
-
-  saveData("expedientes", expedientes);
-
-  renderExpedientes();
-
-  closeModal();
+function expedienteDetailField(label, value) {
+  return `
+    <div class="expediente-detail-field">
+      <span>${escapeHTML(label)}</span>
+      <strong>${escapeHTML(value || "—")}</strong>
+    </div>
+  `;
 }
 
-// =====================================================
-// VER DETALLE
-// =====================================================
+function buildExpedienteDateTime(date, time) {
+  if (!date) return "";
+  return time ? `${date}T${time}:00` : date;
+}
 
-export function viewExpediente(numero) {
-  const expediente = expedientes.find((item) => item.numero === numero);
+function getExpedienteTime(value) {
+  if (!value) return 0;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
 
-  if (!expediente) {
-    return;
+function formatExpedienteDateTime(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
   }
 
-  const modal = document.getElementById("modalContent");
-
-  modal.innerHTML = `
-
-
-<div class="form-header">
-
-
-<span>
-Detalle
-</span>
-
-
-<h2>
-Expediente ${escapeHTML(numero)}
-</h2>
-
-
-</div>
-
-
-
-
-<div class="form-body">
-
-
-<div class="detail-grid">
-
-
-
-<div class="detail-item">
-
-<span>
-Actor
-</span>
-
-
-<strong>
-${escapeHTML(expediente.actor)}
-</strong>
-
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Demandado
-</span>
-
-
-<strong>
-${escapeHTML(expediente.demandado)}
-</strong>
-
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Estado
-</span>
-
-
-<strong>
-${escapeHTML(expediente.estado)}
-</strong>
-
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Ubicación
-</span>
-
-
-<strong>
-${escapeHTML(expediente.ubicacion)}
-</strong>
-
-
-</div>
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-`;
-
-  document.getElementById("modal").classList.add("show");
+  return date.toLocaleString("es-MX", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 // =====================================================
@@ -641,4 +394,74 @@ export function searchExpediente(numero) {
   return expedientes.find(
     (item) => normalizeText(item.numero) === normalizeText(numero),
   );
+}
+
+
+// ============================================================
+// EDITAR EXPEDIENTE EXISTENTE
+// ============================================================
+function openEditExpediente(numero) {
+  expedientes = getData("expedientes", []);
+  const expediente = expedientes.find((item) => String(item.numero) === String(numero));
+  if (!expediente) return;
+
+  const modal = document.getElementById("modalContent");
+  if (!modal) return;
+
+  modal.innerHTML = `
+    <div class="form-header">
+      <span>Expedientes</span>
+      <h2>Editar expediente ${escapeHTML(numero)}</h2>
+      <p>Los cambios se guardarán en el histórico del mismo expediente.</p>
+    </div>
+    <div class="form-body">
+      <form id="editExpedienteForm">
+        <div class="form-grid columns-2">
+          <div class="field"><label>Actor</label><input id="editExpActor" value="${escapeHTML(expediente.actor || "")}"></div>
+          <div class="field"><label>Demandado</label><input id="editExpDemandado" value="${escapeHTML(expediente.demandado || "")}"></div>
+          <div class="field full"><label>Acto demandado</label><input id="editExpActo" value="${escapeHTML(expediente.actoDemandado || expediente.acciones || expediente.accionReclamada || "")}" placeholder="Seleccionado desde la demanda"></div>
+          <div class="field"><label>Clasificación</label><input id="editExpClasificacion" value="${escapeHTML(expediente.clasificacion || "")}"></div>
+          <div class="field"><label>Estado</label><input id="editExpEstado" value="${escapeHTML(expediente.estado || "")}"></div>
+          <div class="field full"><label>Ubicación</label><input id="editExpUbicacion" value="${escapeHTML(expediente.ubicacion || "")}"></div>
+        </div>
+        <div class="form-actions" style="margin-top:20px">
+          <button type="button" class="secondary-btn" id="cancelEditExpediente">Cancelar</button>
+          <button type="submit" class="primary-btn">Guardar cambios</button>
+        </div>
+      </form>
+    </div>`;
+
+  document.getElementById("cancelEditExpediente")?.addEventListener("click", () => viewExpediente(numero));
+  document.getElementById("editExpedienteForm")?.addEventListener("submit", (event) => saveEditExpediente(event, numero));
+}
+
+function saveEditExpediente(event, numero) {
+  event.preventDefault();
+  let lista = getData("expedientes", []);
+  const index = lista.findIndex((item) => String(item.numero) === String(numero));
+  if (index < 0) return;
+
+  const anterior = { ...lista[index] };
+  const actualizado = {
+    ...anterior,
+    actor: document.getElementById("editExpActor").value.trim(),
+    demandado: document.getElementById("editExpDemandado").value.trim(),
+    actoDemandado: document.getElementById("editExpActo").value.trim(),
+    clasificacion: document.getElementById("editExpClasificacion").value.trim(),
+    estado: document.getElementById("editExpEstado").value.trim(),
+    ubicacion: document.getElementById("editExpUbicacion").value.trim(),
+    actualizadoEn: new Date().toISOString(),
+  };
+
+  const campos = [["Actor","actor"],["Demandado","demandado"],["Acto demandado","actoDemandado"],["Clasificación","clasificacion"],["Estado","estado"],["Ubicación","ubicacion"]];
+  const cambios = campos.filter(([,key]) => String(anterior[key] || "") !== String(actualizado[key] || "")).map(([label]) => label);
+  if (!cambios.length) { viewExpediente(numero); return; }
+
+  lista[index] = actualizado;
+  saveData("expedientes", lista);
+  const historial = getData("expedienteHistorial", []);
+  historial.unshift({ id: createId(), expediente: numero, fecha: actualizado.actualizadoEn, detalle: `Campos actualizados: ${cambios.join(", ")}.` });
+  saveData("expedienteHistorial", historial);
+  renderExpedientes();
+  viewExpediente(numero);
 }

@@ -16,9 +16,6 @@ import { createId, escapeHTML } from "../utils.js";
 
 import { getData, saveData } from "../storage.js";
 
-// Usuario simulado conectado en la sesión activa
-const USUARIO_ACTIVO = "Lic. Juan Pérez (Administración)";
-
 // Contexto con el que se abrió el formulario (p. ej. "Anexar oficio"
 // desde Amparos). null = oficio normal.
 let oficioContext = null;
@@ -121,12 +118,19 @@ function setupEstadoListener() {
   }
 
   const renderInfo = () => {
+    const valorActual = document.getElementById("recibidoPorOficio")?.value || "";
+
     if (selectEstado.value === "Recibido") {
       infoContainer.innerHTML = `
-        <div class="recepcion-subtext">
-          <span class="label-recibido">Recibido por:</span>
-          <span class="value-recibido">${escapeHTML(USUARIO_ACTIVO)}</span>
-        </div>
+        <label for="recibidoPorOficio" style="display:block;margin-bottom:6px;font-weight:600;">Recibido por</label>
+        <input
+          id="recibidoPorOficio"
+          type="text"
+          required
+          value="${escapeHTML(valorActual)}"
+          placeholder="Escribe el nombre de quien recibe"
+          autocomplete="off"
+        >
       `;
     } else {
       infoContainer.innerHTML = "";
@@ -190,6 +194,12 @@ function saveOficio(event) {
   const oficios = getData("oficios", []);
   const estadoVal = document.getElementById("estadoOficio")?.value || "Pendiente";
   const esRecibido = estadoVal === "Recibido";
+  const recibidoPor = document.getElementById("recibidoPorOficio")?.value.trim() || "";
+
+  if (esRecibido && !recibidoPor) {
+    document.getElementById("recibidoPorOficio")?.focus();
+    return;
+  }
 
   const nuevoOficio = {
     id: createId(),
@@ -206,7 +216,7 @@ function saveOficio(event) {
 
     estado: estadoVal,
 
-    recibidoPor: esRecibido ? USUARIO_ACTIVO : "",
+    recibidoPor: esRecibido ? recibidoPor : "",
 
     fechaRecepcion: esRecibido ? new Date().toISOString() : null,
 

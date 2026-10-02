@@ -129,10 +129,12 @@ async function loadExpedientesReference() {
 // ABRIR FORMULARIO
 // ============================================================
 
-export async function openAmparoForm() {
+export async function openAmparoForm(amparoId = null) {
 
     await loadExpedientesReference();
 
+    const amparosActuales = getData("amparos", []);
+    const amparoEdicion = amparoId ? amparosActuales.find(item => String(item.id) === String(amparoId)) : null;
 
     showModal(`
 
@@ -150,7 +152,7 @@ export async function openAmparoForm() {
                 </span>
 
                 <h2>
-                    Registrar nuevo amparo
+                    ${amparoEdicion ? "Editar amparo" : "Registrar nuevo amparo"}
                 </h2>
 
                 <p>
@@ -571,7 +573,7 @@ export async function openAmparoForm() {
 
                         <i class="fa-solid fa-check"></i>
 
-                        Registrar amparo
+                        ${amparoEdicion ? "Guardar cambios" : "Registrar amparo"}
 
                     </button>
 
@@ -587,16 +589,35 @@ export async function openAmparoForm() {
     `);
 
 
-    setCurrentDateTime();
+    if (amparoEdicion) {
+        fillAmparoForm(amparoEdicion);
+    } else {
+        setCurrentDateTime();
+    }
 
     setupExpedienteLookup();
-
     setupCancel();
-
-    setupSubmit();
+    setupSubmit(amparoEdicion);
 
 }
 
+
+// ============================================================
+// PRECARGAR AMPARO PARA EDICIÓN
+// ============================================================
+function fillAmparoForm(amparo) {
+    const valores = {
+        ampDia: amparo.dia || "", ampHora: amparo.hora || "", ampExp: amparo.expediente || "",
+        ampPromueve: amparo.promovente || "", ampJuzgado: amparo.juzgado || "", ampOficio: amparo.oficio || "",
+        ampEstado: amparo.estado || "Recibido", ampActoReclamado: amparo.actoReclamado || "",
+        ampAcciones: amparo.acciones || "", ampObservaciones: amparo.observaciones || ""
+    };
+    Object.entries(valores).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.value = value;
+    });
+    buscarExpediente();
+}
 
 // ============================================================
 // FECHA Y HORA ACTUAL
@@ -980,7 +1001,7 @@ function setupCancel() {
 // SUBMIT
 // ============================================================
 
-function setupSubmit() {
+function setupSubmit(amparoEdicion = null) {
 
     document
         .getElementById(
@@ -988,7 +1009,7 @@ function setupSubmit() {
         )
         ?.addEventListener(
             "submit",
-            saveAmparo
+            event => saveAmparo(event, amparoEdicion)
         );
 
 }
@@ -999,7 +1020,8 @@ function setupSubmit() {
 // ============================================================
 
 function saveAmparo(
-    event
+    event,
+    amparoEdicion = null
 ) {
 
     event.preventDefault();
@@ -1015,7 +1037,7 @@ function saveAmparo(
     const nuevoAmparo = {
 
         id:
-            createId(),
+            amparoEdicion?.id || createId(),
 
         dia:
             document
@@ -1095,22 +1117,45 @@ function saveAmparo(
                 .value,
 
         creadoEn:
-            new Date()
-                .toISOString()
+            amparoEdicion?.creadoEn || new Date().toISOString(),
+
+        actualizadoEn:
+            amparoEdicion ? new Date().toISOString() : undefined
 
     };
 
 
-    amparos.unshift(
-        nuevoAmparo
-    );
+    if (amparoEdicion) {
+        const index = amparos.findIndex(item => String(item.id) === String(amparoEdicion.id));
+        if (index >= 0) {
+            const campos = [
+                ["Fecha", "dia"], ["Hora", "hora"], ["Expediente", "expediente"],
+                ["Promovente", "promovente"], ["No. juzgado", "juzgado"], ["No. oficio", "oficio"],
+                ["Acto reclamado", "actoReclamado"], ["Acciones", "acciones"],
+                ["Observaciones", "observaciones"], ["Estado", "estado"]
+            ];
+            const cambios = campos
+                .filter(([, key]) => String(amparoEdicion[key] || "") !== String(nuevoAmparo[key] || ""))
+                .map(([label]) => label);
 
+            if (cambios.length) {
+                const historial = getData("amparoHistorial", []);
+                historial.unshift({
+                    id: createId(),
+                    amparoId: nuevoAmparo.id,
+                    expediente: nuevoAmparo.expediente,
+                    fecha: nuevoAmparo.actualizadoEn,
+                    detalle: `Campos actualizados: ${cambios.join(", ")}.`
+                });
+                saveData("amparoHistorial", historial);
+            }
+            amparos[index] = nuevoAmparo;
+        }
+    } else {
+        amparos.unshift(nuevoAmparo);
+    }
 
-    saveData(
-        "amparos",
-        amparos
-    );
-
+    saveData("amparos", amparos);
 
     closeForm();
 
@@ -1133,3 +1178,4 @@ function saveAmparo(
     }
 
 }
+

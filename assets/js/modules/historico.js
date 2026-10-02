@@ -33,6 +33,7 @@ export async function initHistorico() {
   setupHistoricoSearch();
 
   setupMesasButton();
+  setupAmparosMesasButton();
 
   await loadHistoricoEjemplo();
 
@@ -369,6 +370,86 @@ function setupMesasButton() {
   button.onclick = openMesasConfirmation;
 }
 
+
+function setupAmparosMesasButton() {
+  const button = document.getElementById("sendAmparosToMesasBtn");
+  if (!button) return;
+  button.onclick = openAmparosMesasConfirmation;
+}
+
+function openAmparosMesasConfirmation() {
+  const pendientes = getMovimientosPendientes().filter(item => item.tipo === "Amparo");
+  if (!pendientes.length) {
+    alert("No hay amparos pendientes de enviar a mesas.");
+    return;
+  }
+
+  movimientosActuales = pendientes;
+  const resumen = createResumen(pendientes);
+  showModal(`
+    <div class="mesas-confirm">
+      <div class="mesas-confirm-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <h2>Mandar solo amparos a mesas</h2>
+      <p>Se enviarán únicamente los amparos que todavía no hayan sido enviados.</p>
+      ${renderResumenModal(resumen)}
+      <div class="mesas-confirm-actions">
+        <button type="button" id="cancelAmparosMesasBtn" class="mesas-modal-btn secondary">Cancelar</button>
+        <button type="button" id="confirmAmparosMesasBtn" class="mesas-modal-btn primary"><i class="fa-solid fa-paper-plane"></i> Confirmar envío</button>
+      </div>
+    </div>`);
+
+  document.getElementById("cancelAmparosMesasBtn")?.addEventListener("click", closeForm);
+  document.getElementById("confirmAmparosMesasBtn")?.addEventListener("click", () => sendAmparosToMesas(resumen));
+}
+
+function sendAmparosToMesas(resumen) {
+  const envios = getData("enviosMesas", []);
+  const envio = {
+    id: createId(), fecha: new Date().toISOString(), tipoEnvio: "solo-amparos",
+    total: resumen.total, demandas: 0, amparos: resumen.amparos, exhortos: 0, promociones: 0, oficios: 0,
+    registros: movimientosActuales.map(item => ({ id: item.id, tipo: item.tipo, referencia: item.referencia, movimiento: item.movimiento }))
+  };
+  envios.unshift(envio);
+  saveData("enviosMesas", envios);
+  renderUltimoEnvio();
+  showSuccessModal(envio);
+}
+
+// ============================================================
+// MOVIMIENTOS YA ENVIADOS A MESAS
+// ============================================================
+
+function getClavesEnviadas() {
+  const envios = getData("enviosMesas", []);
+  const claves = new Set();
+
+  envios.forEach((envio) => {
+    if (!Array.isArray(envio.registros)) {
+      return;
+    }
+
+    envio.registros.forEach((registro) => {
+      if (registro?.id) {
+        claves.add(`${registro.tipo || ""}::${registro.id}`);
+      }
+    });
+  });
+
+  return claves;
+}
+
+function getMovimientosPendientes() {
+  const enviados = getClavesEnviadas();
+
+  return getMovimientos().filter((item) => {
+    if (!item.id) {
+      return true;
+    }
+
+    return !enviados.has(`${item.tipo || ""}::${item.id}`);
+  });
+}
+
 // ============================================================
 // ABRIR CONFIRMACIÓN
 // ============================================================
@@ -379,7 +460,7 @@ function openMesasConfirmation() {
    * que el resumen esté actualizado.
    */
 
-  const movimientos = getMovimientos();
+  const movimientos = getMovimientosPendientes();
 
   const filtrados = movimientos.filter((item) => {
     if (!currentFilter) {
@@ -493,6 +574,8 @@ function sendToMesas(resumen) {
     id: createId(),
 
     fecha: new Date().toISOString(),
+
+    tipoEnvio: "general",
 
     total: resumen.total,
 

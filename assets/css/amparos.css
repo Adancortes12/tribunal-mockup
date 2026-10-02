@@ -1545,3 +1545,34 @@
     }
 
 }
+/* ============================================================
+   DETALLE E HISTÓRICO DEL AMPARO
+   ============================================================ */
+.amparo-row-actions { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.amparo-detail-button { display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap; min-height:34px; padding:7px 10px; border:1px solid #b9cde3; border-radius:7px; background:#fff; color:#1768cf; cursor:pointer; font:inherit; }
+#modal.show:has(.amparo-detail-shell) { display:flex !important; align-items:center !important; justify-content:center !important; padding:18px !important; zoom:1.05 !important; }
+#modal.show:has(.amparo-detail-shell) .modal-card { width:780px !important; max-width:calc(100vw - 50px) !important; max-height:88vh !important; padding:0 !important; overflow:hidden !important; border-radius:12px !important; background:#fff !important; }
+.amparo-detail-shell { display:flex; flex-direction:column; max-height:88vh; background:#f5f7fa; color:#102b45; }
+.amparo-detail-header { padding:18px 22px 15px; border-bottom:1px solid #dce4ec; background:#fff; }
+.amparo-detail-header h2 { margin:0 0 5px; font-size:23px; line-height:28px; }
+.amparo-detail-header p { margin:0; color:#71859a; font-size:11px; }
+.amparo-detail-content { display:flex; flex-direction:column; gap:12px; padding:14px; overflow-y:auto; }
+.amparo-detail-section { border:1px solid #d7e0e9; border-radius:9px; background:#fff; overflow:hidden; }
+.amparo-detail-section-title { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border-bottom:1px solid #dfe6ed; background:#f8fafc; }
+.amparo-detail-section-title h3 { margin:0; font-size:13px; color:#19364f; }
+.amparo-detail-section-title p { margin:3px 0 0; font-size:10px; color:#7d8fa0; }
+.amparo-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 14px; padding:13px; }
+.amparo-detail-field { min-width:0; }
+.amparo-detail-field.full { grid-column:1/-1; }
+.amparo-detail-field span { display:block; margin-bottom:5px; color:#71859a; font-size:10px; font-weight:600; }
+.amparo-detail-field strong { display:block; color:#19364f; font-size:12px; line-height:17px; overflow-wrap:anywhere; }
+.amparo-history-list { padding:4px 13px 13px; }
+.amparo-history-item { display:grid; grid-template-columns:32px minmax(0,1fr); gap:10px; padding:12px 0; border-bottom:1px solid #e6ebf0; }
+.amparo-history-item:last-child { border-bottom:0; }
+.amparo-history-icon { display:flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; background:#e8f1ff; color:#2470d4; }
+.amparo-history-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.amparo-history-heading strong { color:#19364f; font-size:12px; }
+.amparo-history-heading span { color:#7d8fa0; font-size:10px; white-space:nowrap; }
+.amparo-history-content p { margin:4px 0 0; color:#5f7488; font-size:11px; line-height:16px; }
+.amparo-history-empty { margin:10px 0 0; color:#71859a; font-size:11px; }
+@media (max-width:700px) { .amparo-detail-grid { grid-template-columns:1fr; } .amparo-detail-field.full { grid-column:auto; } .amparo-history-heading { flex-direction:column; gap:3px; } }
